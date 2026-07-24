@@ -11,11 +11,13 @@ y el proyecto utiliza [versionado semántico](https://semver.org/lang/es/).
 
 - Integración de `running` como carrera de frente.
 - Integración de `failed` como secuencia para tumbarse, descansar y levantarse.
-- Submenú de acciones para trabajar o leer, correr de frente y tumbarse.
+- Integración de `thinking-work` con seis escenas de trabajo.
+- Fundido de 350 ms entre escenas de trabajo, sostenidas durante 1.8 segundos.
+- Submenú de acciones para revisar, pensar o trabajar, correr y tumbarse.
 
 ### Cambiado
 
-- `review` se presenta como la animación de trabajo o lectura.
+- `review` vuelve a presentarse como la animación breve de revisión.
 
 ## [0.1.0] - 2026-07-24
 

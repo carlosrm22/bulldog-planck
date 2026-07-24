@@ -3,6 +3,7 @@
 #include <QCursor>
 #include <QDesktopServices>
 #include <QDir>
+#include <QElapsedTimer>
 #include <QFile>
 #include <QFileInfo>
 #include <QGuiApplication>
@@ -36,6 +37,7 @@ struct Sequence {
     QString name;
     int frameIntervalMs;
     bool loops = true;
+    int crossFadeMilliseconds = 0;
 };
 
 class PetWindow final : public QWidget {
@@ -62,6 +64,16 @@ public:
             advanceFrame();
         });
 
+        fadeTimer_.setInterval(16);
+        fadeTimer_.setTimerType(Qt::PreciseTimer);
+        connect(&fadeTimer_, &QTimer::timeout, this, [this] {
+            if (fadeClock_.elapsed() >= activeCrossFadeMilliseconds_) {
+                fadeTimer_.stop();
+                previousFrameIndex_ = -1;
+            }
+            update();
+        });
+
         stateTimer_.setSingleShot(true);
         connect(&stateTimer_, &QTimer::timeout, this, [this] {
             chooseNextState();
@@ -80,10 +92,31 @@ protected:
             return;
         }
 
-        const QPixmap &frame = sequenceIt->at(frameIndex_ % sequenceIt->size());
         QPainter painter(this);
         painter.setRenderHint(QPainter::SmoothPixmapTransform, true);
-        painter.drawPixmap(rect(), frame);
+
+        const auto drawFrame = [this, &painter, &sequenceIt](
+                                   int index, qreal opacity) {
+            painter.setOpacity(opacity);
+            painter.drawPixmap(
+                rect(), sequenceIt->at(index % sequenceIt->size()));
+        };
+
+        if (previousFrameIndex_ >= 0
+            && activeCrossFadeMilliseconds_ > 0
+            && fadeClock_.isValid()) {
+            const qreal progress = std::clamp(
+                static_cast<qreal>(fadeClock_.elapsed())
+                    / activeCrossFadeMilliseconds_,
+                0.0,
+                1.0);
+            drawFrame(previousFrameIndex_, 1.0 - progress);
+            painter.setCompositionMode(QPainter::CompositionMode_Plus);
+            drawFrame(frameIndex_, progress);
+            painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+        } else {
+            drawFrame(frameIndex_, 1.0);
+        }
     }
 
     void mousePressEvent(QMouseEvent *event) override {
@@ -161,10 +194,15 @@ protected:
                 durationForCycles(QStringLiteral("jumping"), 1));
         });
         actionsMenu->addSeparator();
-        actionsMenu->addAction(QStringLiteral("Trabajar / leer"), this, [this] {
+        actionsMenu->addAction(QStringLiteral("Revisar"), this, [this] {
             setSequence(
                 QStringLiteral("review"),
                 durationForCycles(QStringLiteral("review"), 2));
+        });
+        actionsMenu->addAction(QStringLiteral("Pensar / trabajar"), this, [this] {
+            setSequence(
+                QStringLiteral("thinking-work"),
+                durationForCycles(QStringLiteral("thinking-work"), 1));
         });
         actionsMenu->addAction(QStringLiteral("Correr hacia ti"), this, [this] {
             setSequence(
@@ -224,6 +262,7 @@ private:
             {QStringLiteral("running"), 120},
             {QStringLiteral("waiting"), 220},
             {QStringLiteral("review"), 220},
+            {QStringLiteral("thinking-work"), 1800, false, 350},
             {QStringLiteral("failed"), 230, false},
             {QStringLiteral("waving"), 180},
             {QStringLiteral("jumping"), 130},
@@ -265,6 +304,8 @@ private:
                 frames_.insert(sequence.name, std::move(pixmaps));
                 frameIntervals_.insert(sequence.name, sequence.frameIntervalMs);
                 sequenceLoops_.insert(sequence.name, sequence.loops);
+                crossFadeDurations_.insert(
+                    sequence.name, sequence.crossFadeMilliseconds);
             }
         }
     }
@@ -277,6 +318,9 @@ private:
         currentSequence_.name = name;
         currentSequence_.frameIntervalMs = frameIntervals_.value(name, 180);
         frameIndex_ = 0;
+        previousFrameIndex_ = -1;
+        activeCrossFadeMilliseconds_ = 0;
+        fadeTimer_.stop();
         frameTimer_.start(currentSequence_.frameIntervalMs);
 
         if (durationMs > 0) {
@@ -294,10 +338,25 @@ private:
         }
 
         const int lastFrame = sequenceIt->size() - 1;
+        int nextFrame = frameIndex_;
         if (frameIndex_ < lastFrame) {
-            ++frameIndex_;
+            nextFrame = frameIndex_ + 1;
         } else if (sequenceLoops_.value(currentSequence_.name, true)) {
-            frameIndex_ = 0;
+            nextFrame = 0;
+        }
+
+        if (nextFrame != frameIndex_) {
+            activeCrossFadeMilliseconds_ = crossFadeDurations_.value(
+                currentSequence_.name, 0);
+            if (activeCrossFadeMilliseconds_ > 0) {
+                previousFrameIndex_ = frameIndex_;
+                fadeClock_.restart();
+                fadeTimer_.start();
+            } else {
+                previousFrameIndex_ = -1;
+                fadeTimer_.stop();
+            }
+            frameIndex_ = nextFrame;
         }
 
         if (!paused_ && !dragging_) {
@@ -317,25 +376,29 @@ private:
         }
 
         const int roll = randomBetween(0, 99);
-        if (roll < 42) {
+        if (roll < 40) {
             beginWalk();
-        } else if (roll < 60) {
+        } else if (roll < 57) {
             setSequence(QStringLiteral("idle"), randomBetween(2500, 6000));
-        } else if (roll < 68) {
+        } else if (roll < 64) {
             setSequence(QStringLiteral("look-a"), randomBetween(1700, 3000));
-        } else if (roll < 76) {
+        } else if (roll < 71) {
             setSequence(QStringLiteral("look-b"), randomBetween(1700, 3000));
-        } else if (roll < 83) {
+        } else if (roll < 77) {
             setSequence(QStringLiteral("waiting"), randomBetween(1600, 2800));
-        } else if (roll < 89) {
+        } else if (roll < 82) {
             setSequence(
                 QStringLiteral("review"),
                 durationForCycles(QStringLiteral("review"), 2));
-        } else if (roll < 93) {
+        } else if (roll < 87) {
+            setSequence(
+                QStringLiteral("thinking-work"),
+                durationForCycles(QStringLiteral("thinking-work"), 1));
+        } else if (roll < 91) {
             setSequence(
                 QStringLiteral("running"),
                 durationForCycles(QStringLiteral("running"), randomBetween(2, 4)));
-        } else if (roll < 96) {
+        } else if (roll < 94) {
             setSequence(
                 QStringLiteral("failed"),
                 durationForCycles(QStringLiteral("failed"), 1));
@@ -510,11 +573,16 @@ private:
     QHash<QString, QVector<QPixmap>> frames_;
     QHash<QString, int> frameIntervals_;
     QHash<QString, bool> sequenceLoops_;
+    QHash<QString, int> crossFadeDurations_;
     Sequence currentSequence_{QStringLiteral("idle"), 260};
     QTimer frameTimer_;
+    QTimer fadeTimer_;
     QTimer stateTimer_;
+    QElapsedTimer fadeClock_;
     QSettings settings_;
     int frameIndex_ = 0;
+    int previousFrameIndex_ = -1;
+    int activeCrossFadeMilliseconds_ = 0;
     int groundBottom_ = 0;
     int movementStep_ = 4;
     bool paused_ = false;

@@ -26,9 +26,9 @@ acompañantes de escritorio y en el plasmoide CatWalk de KDE.
 
 - Ventana transparente, sin bordes y siempre visible.
 - Movimiento real hacia la izquierda y la derecha.
-- 73 cuadros PNG con transparencia, distribuidos en 11 secuencias.
+- 79 cuadros PNG con transparencia, distribuidos en 12 secuencias.
 - Comportamientos aleatorios: caminar, correr de frente, descansar, mirar,
-  esperar, trabajar o leer, tumbarse, saludar y saltar.
+  esperar, pensar, trabajar, revisar, tumbarse, saludar y saltar.
 - Tres tamaños seleccionables.
 - Posición y tamaño persistentes entre ejecuciones.
 - Soporte para varios monitores.
@@ -107,13 +107,17 @@ permite reproducir manualmente cualquiera de sus comportamientos especiales.
 | `look-a` | 8 | Mirar alrededor |
 | `look-b` | 8 | Mirar y bajar la cabeza |
 | `waiting` | 6 | Esperar |
-| `review` | 6 | Trabajar o leer |
+| `review` | 6 | Observar o revisar |
+| `thinking-work` | 6 | Pensar, investigar y trabajar |
 | `waving` | 4 | Saludar |
 | `jumping` | 5 | Saltar |
 | `running` | 6 | Correr de frente |
 | `failed` | 8 | Tumbarse, descansar y volver a levantarse |
 
-El nombre original `review` corresponde al comportamiento de trabajo o lectura.
+`thinking-work` cambia de escena cada 1.8 segundos y utiliza un fundido de
+350 milisegundos. Sus poses —laptop, escritura, pensamiento, investigación,
+revisión y tableta— son escenas conceptuales, no cuadros de movimiento continuo.
+
 `failed` conserva su nombre de archivo por compatibilidad con el paquete
 gráfico, pero dentro de la mascota representa un descanso: Planck se tumba, se
 queda quieto unos segundos y vuelve a levantarse.
