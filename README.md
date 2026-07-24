@@ -27,8 +27,8 @@ acompañantes de escritorio y en el plasmoide CatWalk de KDE.
 - Ventana transparente, sin bordes y siempre visible.
 - Movimiento real hacia la izquierda y la derecha.
 - 73 cuadros PNG con transparencia, distribuidos en 11 secuencias.
-- Comportamientos aleatorios: caminar, descansar, mirar, esperar, revisar,
-  saludar y saltar.
+- Comportamientos aleatorios: caminar, correr de frente, descansar, mirar,
+  esperar, trabajar o leer, tumbarse, saludar y saltar.
 - Tres tamaños seleccionables.
 - Posición y tamaño persistentes entre ejecuciones.
 - Soporte para varios monitores.
@@ -94,7 +94,8 @@ planck-pet
 | Clic derecho | Abre el menú de controles |
 
 Desde el menú contextual puedes pausarlo, cambiar su tamaño, devolverlo al borde
-inferior, activar el inicio con la sesión o salir.
+inferior, activar el inicio con la sesión o salir. El submenú **Acciones**
+permite reproducir manualmente cualquiera de sus comportamientos especiales.
 
 ## Animaciones incluidas
 
@@ -106,15 +107,16 @@ inferior, activar el inicio con la sesión o salir.
 | `look-a` | 8 | Mirar alrededor |
 | `look-b` | 8 | Mirar y bajar la cabeza |
 | `waiting` | 6 | Esperar |
-| `review` | 6 | Observar o revisar |
+| `review` | 6 | Trabajar o leer |
 | `waving` | 4 | Saludar |
 | `jumping` | 5 | Saltar |
-| `running` | 6 | Incluida; comportamiento pendiente |
-| `failed` | 8 | Incluida; comportamiento pendiente |
+| `running` | 6 | Correr de frente |
+| `failed` | 8 | Tumbarse, descansar y volver a levantarse |
 
-Los paquetes gráficos iniciales no contienen una secuencia llamada `reading` o
-“leyendo”. Si aparece el paquete original con esa animación, la incorporaremos
-como un estado adicional.
+El nombre original `review` corresponde al comportamiento de trabajo o lectura.
+`failed` conserva su nombre de archivo por compatibilidad con el paquete
+gráfico, pero dentro de la mascota representa un descanso: Planck se tumba, se
+queda quieto unos segundos y vuelve a levantarse.
 
 ## Actualizar
 
@@ -157,7 +159,7 @@ Consulta [CONTRIBUTING.md](CONTRIBUTING.md) antes de enviar cambios.
 
 - Controles para velocidad de caminata.
 - Ajustes para frecuencia y duración de comportamientos.
-- Nuevos estados: dormir, leer y jugar.
+- Nuevos estados: dormir y jugar.
 - Selección de monitor y recorrido.
 - Paquetes AppImage, RPM y DEB.
 - Traducciones y pruebas en otros escritorios.

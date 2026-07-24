@@ -7,10 +7,15 @@ y el proyecto utiliza [versionado semántico](https://semver.org/lang/es/).
 
 ## [Sin publicar]
 
-### Planeado
+### Añadido
 
-- Preferencias para velocidad y frecuencia de comportamientos.
-- Nuevos estados animados, incluyendo dormir y leer.
+- Integración de `running` como carrera de frente.
+- Integración de `failed` como secuencia para tumbarse, descansar y levantarse.
+- Submenú de acciones para trabajar o leer, correr de frente y tumbarse.
+
+### Cambiado
+
+- `review` se presenta como la animación de trabajo o lectura.
 
 ## [0.1.0] - 2026-07-24
 

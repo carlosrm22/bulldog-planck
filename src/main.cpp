@@ -29,11 +29,13 @@ namespace {
 constexpr int kSmallWidth = 115;
 constexpr int kMediumWidth = 154;
 constexpr int kLargeWidth = 192;
+constexpr int kRestHoldMilliseconds = 2500;
 constexpr double kFrameAspect = 208.0 / 192.0;
 
 struct Sequence {
     QString name;
     int frameIntervalMs;
+    bool loops = true;
 };
 
 class PetWindow final : public QWidget {
@@ -117,7 +119,9 @@ protected:
             clampToCurrentScreen();
             savePosition();
             if (!dragged_) {
-                setSequence(QStringLiteral("waving"), 4 * 180);
+                setSequence(
+                    QStringLiteral("waving"),
+                    durationForCycles(QStringLiteral("waving"), 1));
             }
             event->accept();
             return;
@@ -127,7 +131,9 @@ protected:
 
     void mouseDoubleClickEvent(QMouseEvent *event) override {
         if (event->button() == Qt::LeftButton) {
-            setSequence(QStringLiteral("jumping"), 5 * 130);
+            setSequence(
+                QStringLiteral("jumping"),
+                durationForCycles(QStringLiteral("jumping"), 1));
             event->accept();
             return;
         }
@@ -143,11 +149,32 @@ protected:
         pauseAction->setCheckable(true);
         pauseAction->setChecked(paused_);
 
-        menu.addAction(QStringLiteral("Saludar"), this, [this] {
-            setSequence(QStringLiteral("waving"), 4 * 180);
+        QMenu *actionsMenu = menu.addMenu(QStringLiteral("Acciones"));
+        actionsMenu->addAction(QStringLiteral("Saludar"), this, [this] {
+            setSequence(
+                QStringLiteral("waving"),
+                durationForCycles(QStringLiteral("waving"), 1));
         });
-        menu.addAction(QStringLiteral("Saltar"), this, [this] {
-            setSequence(QStringLiteral("jumping"), 5 * 130);
+        actionsMenu->addAction(QStringLiteral("Saltar"), this, [this] {
+            setSequence(
+                QStringLiteral("jumping"),
+                durationForCycles(QStringLiteral("jumping"), 1));
+        });
+        actionsMenu->addSeparator();
+        actionsMenu->addAction(QStringLiteral("Trabajar / leer"), this, [this] {
+            setSequence(
+                QStringLiteral("review"),
+                durationForCycles(QStringLiteral("review"), 2));
+        });
+        actionsMenu->addAction(QStringLiteral("Correr hacia ti"), this, [this] {
+            setSequence(
+                QStringLiteral("running"),
+                durationForCycles(QStringLiteral("running"), 3));
+        });
+        actionsMenu->addAction(QStringLiteral("Tumbarse y descansar"), this, [this] {
+            setSequence(
+                QStringLiteral("failed"),
+                durationForCycles(QStringLiteral("failed"), 1));
         });
 
         QMenu *sizeMenu = menu.addMenu(QStringLiteral("Tamaño"));
@@ -197,7 +224,7 @@ private:
             {QStringLiteral("running"), 120},
             {QStringLiteral("waiting"), 220},
             {QStringLiteral("review"), 220},
-            {QStringLiteral("failed"), 230},
+            {QStringLiteral("failed"), 230, false},
             {QStringLiteral("waving"), 180},
             {QStringLiteral("jumping"), 130},
         };
@@ -216,9 +243,28 @@ private:
                 }
             }
 
+            if (sequence.name == QStringLiteral("failed") && pixmaps.size() > 4) {
+                QVector<QPixmap> restingSequence;
+                const int repeatedFrames = std::max(
+                    1, kRestHoldMilliseconds / sequence.frameIntervalMs);
+                restingSequence.reserve(pixmaps.size() + repeatedFrames);
+                for (int index = 0; index < pixmaps.size(); ++index) {
+                    restingSequence.push_back(pixmaps.at(index));
+                    if (index == 4) {
+                        for (int repetition = 0;
+                             repetition < repeatedFrames;
+                             ++repetition) {
+                            restingSequence.push_back(pixmaps.at(index));
+                        }
+                    }
+                }
+                pixmaps = std::move(restingSequence);
+            }
+
             if (!pixmaps.isEmpty()) {
                 frames_.insert(sequence.name, std::move(pixmaps));
                 frameIntervals_.insert(sequence.name, sequence.frameIntervalMs);
+                sequenceLoops_.insert(sequence.name, sequence.loops);
             }
         }
     }
@@ -247,7 +293,12 @@ private:
             return;
         }
 
-        frameIndex_ = (frameIndex_ + 1) % sequenceIt->size();
+        const int lastFrame = sequenceIt->size() - 1;
+        if (frameIndex_ < lastFrame) {
+            ++frameIndex_;
+        } else if (sequenceLoops_.value(currentSequence_.name, true)) {
+            frameIndex_ = 0;
+        }
 
         if (!paused_ && !dragging_) {
             if (currentSequence_.name == QStringLiteral("running-left")) {
@@ -266,23 +317,43 @@ private:
         }
 
         const int roll = randomBetween(0, 99);
-        if (roll < 48) {
+        if (roll < 42) {
             beginWalk();
-        } else if (roll < 68) {
+        } else if (roll < 60) {
             setSequence(QStringLiteral("idle"), randomBetween(2500, 6000));
-        } else if (roll < 76) {
+        } else if (roll < 68) {
             setSequence(QStringLiteral("look-a"), randomBetween(1700, 3000));
-        } else if (roll < 84) {
+        } else if (roll < 76) {
             setSequence(QStringLiteral("look-b"), randomBetween(1700, 3000));
-        } else if (roll < 90) {
+        } else if (roll < 83) {
             setSequence(QStringLiteral("waiting"), randomBetween(1600, 2800));
-        } else if (roll < 94) {
-            setSequence(QStringLiteral("review"), randomBetween(1500, 2600));
-        } else if (roll < 98) {
-            setSequence(QStringLiteral("waving"), 4 * 180);
+        } else if (roll < 89) {
+            setSequence(
+                QStringLiteral("review"),
+                durationForCycles(QStringLiteral("review"), 2));
+        } else if (roll < 93) {
+            setSequence(
+                QStringLiteral("running"),
+                durationForCycles(QStringLiteral("running"), randomBetween(2, 4)));
+        } else if (roll < 96) {
+            setSequence(
+                QStringLiteral("failed"),
+                durationForCycles(QStringLiteral("failed"), 1));
+        } else if (roll < 99) {
+            setSequence(
+                QStringLiteral("waving"),
+                durationForCycles(QStringLiteral("waving"), 1));
         } else {
-            setSequence(QStringLiteral("jumping"), 5 * 130);
+            setSequence(
+                QStringLiteral("jumping"),
+                durationForCycles(QStringLiteral("jumping"), 1));
         }
+    }
+
+    int durationForCycles(const QString &name, int cycles) const {
+        const int frameCount = frames_.value(name).size();
+        const int frameInterval = frameIntervals_.value(name, 180);
+        return frameCount * frameInterval * std::max(1, cycles);
     }
 
     void beginWalk() {
@@ -438,6 +509,7 @@ private:
     QString framesRoot_;
     QHash<QString, QVector<QPixmap>> frames_;
     QHash<QString, int> frameIntervals_;
+    QHash<QString, bool> sequenceLoops_;
     Sequence currentSequence_{QStringLiteral("idle"), 260};
     QTimer frameTimer_;
     QTimer stateTimer_;
@@ -485,7 +557,7 @@ int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
     QCoreApplication::setApplicationName(QStringLiteral("planck-pet"));
     QCoreApplication::setOrganizationName(QStringLiteral("Carlos"));
-    QCoreApplication::setApplicationVersion(QStringLiteral("1.0.0"));
+    QCoreApplication::setApplicationVersion(QStringLiteral(PLANCK_VERSION));
     app.setQuitOnLastWindowClosed(true);
 
     const QString runtimeDir = QStandardPaths::writableLocation(QStandardPaths::RuntimeLocation);
