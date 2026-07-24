@@ -1,0 +1,50 @@
+name: Reportar un problema
+description: Informa sobre un fallo reproducible de Bulldog Planck.
+title: "[Error]: "
+labels: ["error"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Gracias por ayudarnos a cuidar a Planck.
+
+  - type: input
+    id: version
+    attributes:
+      label: Versión
+      placeholder: "0.1.0"
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Sistema
+      description: Distribución, escritorio, versión y tipo de sesión.
+      placeholder: "Fedora 44, KDE Plasma 6, Wayland"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: ¿Qué ocurrió?
+      description: Explica el resultado observado y el esperado.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Pasos para reproducirlo
+      placeholder: |
+        1. Abrir Planck
+        2. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Registros o capturas
+      description: No incluyas información privada.

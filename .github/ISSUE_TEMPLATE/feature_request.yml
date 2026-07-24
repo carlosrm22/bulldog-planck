@@ -1,0 +1,25 @@
+name: Proponer una mejora
+description: Sugiere un comportamiento, animación o función nueva.
+title: "[Idea]: "
+labels: ["mejora"]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: Propuesta
+      description: ¿Qué te gustaría que hiciera Planck?
+    validations:
+      required: true
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivación
+      description: ¿Qué experiencia mejoraría?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternativas consideradas
