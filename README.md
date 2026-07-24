@@ -11,7 +11,7 @@
 <p align="center">
   <a href="https://github.com/carlosrm22/bulldog-planck/actions/workflows/build.yml"><img src="https://github.com/carlosrm22/bulldog-planck/actions/workflows/build.yml/badge.svg" alt="Compilación"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/licencia-MIT-1D71B8.svg" alt="Licencia MIT"></a>
-  <img src="https://img.shields.io/badge/Qt-6.6%2B-41CD52.svg" alt="Qt 6.6 o posterior">
+  <img src="https://img.shields.io/badge/Qt-6.4%2B-41CD52.svg" alt="Qt 6.4 o posterior">
 </p>
 
 Planck es un bulldog inglés que vive en una ventana transparente, camina por el
@@ -43,7 +43,7 @@ La versión inicial está desarrollada y probada en:
 - Linux.
 - KDE Plasma 6.
 - Sesión Wayland con XWayland.
-- Qt 6.6 o posterior.
+- Qt 6.4 o posterior.
 
 Planck utiliza deliberadamente el backend XCB de Qt. Wayland impide que una
 ventana convencional cambie libremente su posición; XWayland permite que Planck
