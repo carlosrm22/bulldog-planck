@@ -30,7 +30,9 @@ namespace {
 constexpr int kSmallWidth = 115;
 constexpr int kMediumWidth = 154;
 constexpr int kLargeWidth = 192;
-constexpr int kRestHoldMilliseconds = 2500;
+constexpr int kRestHoldMilliseconds = 12000;
+constexpr int kQuietPauseMinimumMilliseconds = 5000;
+constexpr int kQuietPauseMaximumMilliseconds = 9000;
 constexpr double kFrameAspect = 208.0 / 192.0;
 
 struct Sequence {
@@ -76,13 +78,13 @@ public:
 
         stateTimer_.setSingleShot(true);
         connect(&stateTimer_, &QTimer::timeout, this, [this] {
-            chooseNextState();
+            finishCurrentState();
         });
 
         const int savedWidth = settings_.value(QStringLiteral("petWidth"), kMediumWidth).toInt();
         setPetWidth(std::clamp(savedWidth, kSmallWidth, kLargeWidth), false);
         restorePosition();
-        setSequence(QStringLiteral("idle"), randomBetween(2500, 4500));
+        beginQuietPause();
     }
 
 protected:
@@ -379,7 +381,7 @@ private:
         if (roll < 40) {
             beginWalk();
         } else if (roll < 57) {
-            setSequence(QStringLiteral("idle"), randomBetween(2500, 6000));
+            setSequence(QStringLiteral("idle"), randomBetween(6000, 12000));
         } else if (roll < 64) {
             setSequence(QStringLiteral("look-a"), randomBetween(1700, 3000));
         } else if (roll < 71) {
@@ -411,6 +413,28 @@ private:
                 QStringLiteral("jumping"),
                 durationForCycles(QStringLiteral("jumping"), 1));
         }
+    }
+
+    void finishCurrentState() {
+        if (paused_) {
+            setSequence(QStringLiteral("idle"), 0);
+            return;
+        }
+
+        if (currentSequence_.name == QStringLiteral("idle")) {
+            chooseNextState();
+            return;
+        }
+
+        beginQuietPause();
+    }
+
+    void beginQuietPause() {
+        setSequence(
+            QStringLiteral("idle"),
+            randomBetween(
+                kQuietPauseMinimumMilliseconds,
+                kQuietPauseMaximumMilliseconds));
     }
 
     int durationForCycles(const QString &name, int cycles) const {

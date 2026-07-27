@@ -18,6 +18,8 @@ y el proyecto utiliza [versionado semántico](https://semver.org/lang/es/).
 ### Cambiado
 
 - `review` vuelve a presentarse como la animación breve de revisión.
+- Planck permanece tumbado unos 12 segundos antes de volver a levantarse.
+- Después de cada acción hay una pausa tranquila de entre 5 y 9 segundos.
 
 ## [0.1.0] - 2026-07-24
 

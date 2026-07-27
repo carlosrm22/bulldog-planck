@@ -29,6 +29,7 @@ acompañantes de escritorio y en el plasmoide CatWalk de KDE.
 - 79 cuadros PNG con transparencia, distribuidos en 12 secuencias.
 - Comportamientos aleatorios: caminar, correr de frente, descansar, mirar,
   esperar, pensar, trabajar, revisar, tumbarse, saludar y saltar.
+- Ritmo tranquilo: Planck reposa entre 5 y 9 segundos después de cada acción.
 - Tres tamaños seleccionables.
 - Posición y tamaño persistentes entre ejecuciones.
 - Soporte para varios monitores.
@@ -120,7 +121,7 @@ revisión y tableta— son escenas conceptuales, no cuadros de movimiento contin
 
 `failed` conserva su nombre de archivo por compatibilidad con el paquete
 gráfico, pero dentro de la mascota representa un descanso: Planck se tumba, se
-queda quieto unos segundos y vuelve a levantarse.
+queda quieto unos 12 segundos y vuelve a levantarse.
 
 ## Actualizar
 
