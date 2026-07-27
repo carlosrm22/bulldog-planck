@@ -30,6 +30,7 @@ acompañantes de escritorio y en el plasmoide CatWalk de KDE.
 - Comportamientos aleatorios: caminar, correr de frente, descansar, mirar,
   esperar, pensar, trabajar, revisar, tumbarse, saludar y saltar.
 - Ritmo tranquilo: Planck reposa entre 5 y 9 segundos después de cada acción.
+- Parpadeos esporádicos y breves; caminar y saludar son sus gestos más habituales.
 - Tres tamaños seleccionables.
 - Posición y tamaño persistentes entre ejecuciones.
 - Soporte para varios monitores.

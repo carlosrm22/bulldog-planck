@@ -33,6 +33,8 @@ constexpr int kLargeWidth = 192;
 constexpr int kRestHoldMilliseconds = 12000;
 constexpr int kQuietPauseMinimumMilliseconds = 5000;
 constexpr int kQuietPauseMaximumMilliseconds = 9000;
+constexpr int kBlinkChancePercent = 12;
+constexpr int kBlinkClosedMilliseconds = 120;
 constexpr double kFrameAspect = 208.0 / 192.0;
 
 struct Sequence {
@@ -347,6 +349,13 @@ private:
             nextFrame = 0;
         }
 
+        const bool isIdle = currentSequence_.name == QStringLiteral("idle");
+        const bool wouldBlink = isIdle && nextFrame == 2;
+        if (wouldBlink
+            && QRandomGenerator::global()->bounded(100) >= kBlinkChancePercent) {
+            nextFrame = 3;
+        }
+
         if (nextFrame != frameIndex_) {
             activeCrossFadeMilliseconds_ = crossFadeDurations_.value(
                 currentSequence_.name, 0);
@@ -359,6 +368,13 @@ private:
                 fadeTimer_.stop();
             }
             frameIndex_ = nextFrame;
+        }
+
+        const int nextFrameInterval = isIdle && frameIndex_ == 2
+            ? kBlinkClosedMilliseconds
+            : currentSequence_.frameIntervalMs;
+        if (frameTimer_.interval() != nextFrameInterval) {
+            frameTimer_.setInterval(nextFrameInterval);
         }
 
         if (!paused_ && !dragging_) {
@@ -380,34 +396,34 @@ private:
         const int roll = randomBetween(0, 99);
         if (roll < 40) {
             beginWalk();
-        } else if (roll < 57) {
+        } else if (roll < 55) {
             setSequence(QStringLiteral("idle"), randomBetween(6000, 12000));
-        } else if (roll < 64) {
-            setSequence(QStringLiteral("look-a"), randomBetween(1700, 3000));
-        } else if (roll < 71) {
-            setSequence(QStringLiteral("look-b"), randomBetween(1700, 3000));
-        } else if (roll < 77) {
-            setSequence(QStringLiteral("waiting"), randomBetween(1600, 2800));
-        } else if (roll < 82) {
-            setSequence(
-                QStringLiteral("review"),
-                durationForCycles(QStringLiteral("review"), 2));
-        } else if (roll < 87) {
-            setSequence(
-                QStringLiteral("thinking-work"),
-                durationForCycles(QStringLiteral("thinking-work"), 1));
-        } else if (roll < 91) {
-            setSequence(
-                QStringLiteral("running"),
-                durationForCycles(QStringLiteral("running"), randomBetween(2, 4)));
-        } else if (roll < 94) {
-            setSequence(
-                QStringLiteral("failed"),
-                durationForCycles(QStringLiteral("failed"), 1));
-        } else if (roll < 99) {
+        } else if (roll < 70) {
             setSequence(
                 QStringLiteral("waving"),
                 durationForCycles(QStringLiteral("waving"), 1));
+        } else if (roll < 76) {
+            setSequence(QStringLiteral("look-a"), randomBetween(1700, 3000));
+        } else if (roll < 82) {
+            setSequence(QStringLiteral("look-b"), randomBetween(1700, 3000));
+        } else if (roll < 87) {
+            setSequence(QStringLiteral("waiting"), randomBetween(1600, 2800));
+        } else if (roll < 91) {
+            setSequence(
+                QStringLiteral("review"),
+                durationForCycles(QStringLiteral("review"), 2));
+        } else if (roll < 95) {
+            setSequence(
+                QStringLiteral("thinking-work"),
+                durationForCycles(QStringLiteral("thinking-work"), 1));
+        } else if (roll < 97) {
+            setSequence(
+                QStringLiteral("running"),
+                durationForCycles(QStringLiteral("running"), randomBetween(2, 4)));
+        } else if (roll < 99) {
+            setSequence(
+                QStringLiteral("failed"),
+                durationForCycles(QStringLiteral("failed"), 1));
         } else {
             setSequence(
                 QStringLiteral("jumping"),
