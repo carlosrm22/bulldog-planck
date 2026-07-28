@@ -116,9 +116,10 @@ permite reproducir manualmente cualquiera de sus comportamientos especiales.
 | `running` | 6 | Trotar de frente |
 | `failed` | 8 | Tumbarse, descansar y volver a levantarse |
 
-`thinking-work` cambia de escena cada 1.8 segundos y utiliza un fundido de
-350 milisegundos. Sus poses —laptop, escritura, pensamiento, investigación,
-revisión y tableta— son escenas conceptuales, no cuadros de movimiento continuo.
+`thinking-work` conserva 10.8 segundos totales y utiliza un fundido de
+350 milisegundos tanto entre actividades como al entrar y salir del modo de
+trabajo. Sus poses —laptop, escritura, pensamiento, investigación, revisión y
+tableta— duran respectivamente 2.0, 1.7, 2.2, 1.7, 1.6 y 1.6 segundos.
 
 Los ciclos laterales comparten exactamente las mismas poses reflejadas y
 mantienen las patas alineadas con el borde inferior. Las dos secuencias de mirada
