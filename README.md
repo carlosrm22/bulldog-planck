@@ -108,7 +108,7 @@ permite reproducir manualmente cualquiera de sus comportamientos especiales.
 | `running-right` | 8 | Caminar hacia la derecha, como espejo exacto |
 | `look-a` | 8 | Mirar alrededor en ida y vuelta |
 | `look-b` | 8 | Mirar y bajar la cabeza en ida y vuelta |
-| `waiting` | 6 | Esperar |
+| `waiting` | 6 | Esperar sentado, respirar y parpadear |
 | `review` | 6 | Observar o revisar |
 | `thinking-work` | 6 | Pensar, investigar y trabajar |
 | `waving` | 4 | Saludar |
@@ -123,6 +123,10 @@ revisión y tableta— son escenas conceptuales, no cuadros de movimiento contin
 Los ciclos laterales comparten exactamente las mismas poses reflejadas y
 mantienen las patas alineadas con el borde inferior. Las dos secuencias de mirada
 regresan por sus propios cuadros para evitar un salto brusco al comenzar de nuevo.
+
+Durante `waiting`, Planck conserva una sola postura sentada, respira con un
+desplazamiento de un píxel y cierra los ojos durante 120 milisegundos. Así evita
+los saltos de cuerpo y perspectiva que tenía la secuencia original.
 
 `failed` conserva su nombre de archivo por compatibilidad con el paquete
 gráfico, pero dentro de la mascota representa un descanso: Planck se tumba, se

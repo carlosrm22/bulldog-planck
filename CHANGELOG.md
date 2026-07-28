@@ -27,6 +27,9 @@ y el proyecto utiliza [versionado semántico](https://semver.org/lang/es/).
   el reflejo exacto del izquierdo.
 - `look-a` y `look-b` se reproducen en ida y vuelta para evitar saltos al
   reiniciar la secuencia.
+- `idle-05` conserva la identidad visual de la postura de reposo.
+- `waiting` mantiene una postura sentada estable, con respiración de un píxel y
+  un parpadeo de 120 ms.
 
 ## [0.1.0] - 2026-07-24
 
