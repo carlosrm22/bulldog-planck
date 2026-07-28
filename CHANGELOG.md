@@ -18,8 +18,8 @@ y el proyecto utiliza [versionado semántico](https://semver.org/lang/es/).
 ### Cambiado
 
 - `review` vuelve a presentarse como la animación breve de revisión.
-- Planck permanece tumbado unos 12 segundos antes de volver a levantarse.
-- Después de cada acción hay una pausa tranquila de entre 5 y 9 segundos.
+- Planck permanece tumbado unos 18 segundos antes de volver a levantarse.
+- Después de cada acción hay una pausa tranquila de entre 3 y 5 segundos.
 - El parpadeo durante el reposo es menos frecuente y mantiene el ojo cerrado
   durante menos tiempo.
 - El saludo aparece con mayor frecuencia en la rutina espontánea.
@@ -30,7 +30,8 @@ y el proyecto utiliza [versionado semántico](https://semver.org/lang/es/).
 - `idle-05` conserva la identidad visual de la postura de reposo.
 - `waiting` mantiene una postura sentada estable, con respiración de un píxel y
   un parpadeo de 120 ms.
-- La espera sentada aumenta del 5 % al 10 % de las decisiones espontáneas.
+- La espera sentada aumenta al 14 % de las decisiones espontáneas, dura entre
+  6 y 10 segundos y reduce sus parpadeos al 20 % de las vueltas.
 - `running` utiliza un trote frontal coherente con dos poses y un rebote máximo
   de dos píxeles.
 - El salto distribuye sus 650 ms entre anticipación, ascenso, ápice, descenso y
@@ -40,17 +41,18 @@ y el proyecto utiliza [versionado semántico](https://semver.org/lang/es/).
 - `look-a` y `look-b` parten y regresan a una pose neutral, completan siempre
   sus ciclos de 2.78 segundos y cambian directamente entre cuadros para evitar
   destellos de toda la figura.
-- El descanso tumbado conserva sus 13.8 segundos sin duplicar pixmaps en memoria
+- El descanso tumbado dura 19.5 segundos sin duplicar pixmaps en memoria
   y cambia directamente entre poses.
 - `thinking-work` conserva sus 10.8 segundos y pasa de seis poses con fundido a
   17 cuadros continuos con transiciones físicas breves.
 - Se elimina el motor de fundido alfa para evitar que toda la figura destelle o
   pierda opacidad al cambiar de cuadro en cualquier secuencia.
 - Las caminatas laterales amplían uniformemente la silueta y ensanchan el lienzo
-  sólo mientras duran, conservando el centro y la línea del suelo.
-- `thinking-work` aumenta del 4 % al 8 % de las decisiones; `review` sube al
-  5 %, la carrera frontal al 4 % y cada mirada al 6 %. Caminar sigue siendo la
-  conducta principal con 34 % y el saludo la segunda con 14 %.
+  un 30 % sólo mientras duran, conservando el centro y la línea del suelo sin
+  hacer que Planck crezca visualmente.
+- El reposo frontal espontáneo baja al 4 %; caminar queda en 28 %, esperar
+  sentado en 14 %, saludar en 12 %, trabajar en 9 %, revisar en 7 %, cada
+  mirada en 6 %, correr de frente y tumbarse en 5 %, y saltar en 4 %.
 
 ## [0.1.0] - 2026-07-24
 

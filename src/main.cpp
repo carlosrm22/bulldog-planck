@@ -31,11 +31,16 @@ namespace {
 constexpr int kSmallWidth = 115;
 constexpr int kMediumWidth = 154;
 constexpr int kLargeWidth = 192;
-constexpr int kQuietPauseMinimumMilliseconds = 5000;
-constexpr int kQuietPauseMaximumMilliseconds = 9000;
+constexpr int kQuietPauseMinimumMilliseconds = 3000;
+constexpr int kQuietPauseMaximumMilliseconds = 5000;
+constexpr int kIdleMinimumMilliseconds = 4000;
+constexpr int kIdleMaximumMilliseconds = 7000;
+constexpr int kWaitingMinimumMilliseconds = 6000;
+constexpr int kWaitingMaximumMilliseconds = 10000;
 constexpr int kBlinkChancePercent = 12;
+constexpr int kWaitingBlinkChancePercent = 20;
 constexpr int kBlinkClosedMilliseconds = 120;
-constexpr double kLateralVisualScale = 1.45;
+constexpr double kLateralVisualScale = 1.30;
 constexpr std::array<int, 5> kJumpFrameIntervals{
     170, 100, 110, 100, 170};
 constexpr std::array<int, 4> kWaveFrameIntervals{
@@ -47,7 +52,7 @@ constexpr std::array<int, 9> kLookAFrameIntervals{
 constexpr std::array<int, 9> kLookBFrameIntervals{
     300, 150, 150, 140, 130, 140, 150, 180, 400};
 constexpr std::array<int, 8> kFailedFrameIntervals{
-    230, 190, 170, 170, 12300, 230, 220, 290};
+    230, 190, 170, 170, 18000, 230, 220, 290};
 constexpr std::array<int, 17> kThinkingWorkFrameIntervals{
     100, 140, 140, 1600, 150, 1500,
     150, 2000, 150, 1500, 150, 1350,
@@ -382,8 +387,10 @@ private:
         const bool isWaiting = currentSequence_.name == QStringLiteral("waiting");
         const bool isBlinkingSequence = isIdle || isWaiting;
         const bool wouldBlink = isBlinkingSequence && nextFrame == 2;
-        if (wouldBlink && isIdle
-            && QRandomGenerator::global()->bounded(100) >= kBlinkChancePercent) {
+        const int blinkChancePercent =
+            isWaiting ? kWaitingBlinkChancePercent : kBlinkChancePercent;
+        if (wouldBlink
+            && QRandomGenerator::global()->bounded(100) >= blinkChancePercent) {
             nextFrame = 3;
         }
 
@@ -414,37 +421,41 @@ private:
         }
 
         const int roll = randomBetween(0, 99);
-        if (roll < 34) {
+        if (roll < 28) {
             beginWalk();
+        } else if (roll < 32) {
+            setSequence(
+                QStringLiteral("idle"),
+                randomBetween(kIdleMinimumMilliseconds, kIdleMaximumMilliseconds));
         } else if (roll < 44) {
-            setSequence(QStringLiteral("idle"), randomBetween(6000, 12000));
-        } else if (roll < 58) {
             setSequence(
                 QStringLiteral("waving"),
                 durationForCycles(QStringLiteral("waving"), 1));
-        } else if (roll < 64) {
+        } else if (roll < 50) {
             setSequence(
                 QStringLiteral("look-a"),
                 durationForPingPongCycles(QStringLiteral("look-a"), 1));
-        } else if (roll < 70) {
+        } else if (roll < 56) {
             setSequence(
                 QStringLiteral("look-b"),
                 durationForPingPongCycles(QStringLiteral("look-b"), 1));
-        } else if (roll < 80) {
-            setSequence(QStringLiteral("waiting"), randomBetween(1600, 2800));
-        } else if (roll < 85) {
+        } else if (roll < 70) {
+            setSequence(
+                QStringLiteral("waiting"),
+                randomBetween(kWaitingMinimumMilliseconds, kWaitingMaximumMilliseconds));
+        } else if (roll < 77) {
             setSequence(
                 QStringLiteral("review"),
                 durationForCycles(QStringLiteral("review"), 2));
-        } else if (roll < 93) {
+        } else if (roll < 86) {
             setSequence(
                 QStringLiteral("thinking-work"),
                 durationForCycles(QStringLiteral("thinking-work"), 1));
-        } else if (roll < 97) {
+        } else if (roll < 91) {
             setSequence(
                 QStringLiteral("running"),
                 durationForCycles(QStringLiteral("running"), randomBetween(2, 4)));
-        } else if (roll < 99) {
+        } else if (roll < 96) {
             setSequence(
                 QStringLiteral("failed"),
                 durationForCycles(QStringLiteral("failed"), 1));
