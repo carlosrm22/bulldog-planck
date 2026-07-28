@@ -41,6 +41,7 @@ constexpr int kBlinkChancePercent = 12;
 constexpr int kWaitingBlinkChancePercent = 20;
 constexpr int kBlinkClosedMilliseconds = 120;
 constexpr double kLateralVisualScale = 1.30;
+constexpr double kJumpVisualScale = 1.20;
 constexpr std::array<int, 5> kJumpFrameIntervals{
     170, 100, 110, 100, 170};
 constexpr std::array<int, 4> kWaveFrameIntervals{
@@ -628,6 +629,20 @@ private:
             || name == QStringLiteral("running-right");
     }
 
+    static bool isJumpSequence(const QString &name) {
+        return name == QStringLiteral("jumping");
+    }
+
+    static double windowScaleForSequence(const QString &name) {
+        if (isLateralSequence(name)) {
+            return kLateralVisualScale;
+        }
+        if (isJumpSequence(name)) {
+            return kJumpVisualScale;
+        }
+        return 1.0;
+    }
+
     QRectF frameTargetRect(const QString &name) const {
         if (!isLateralSequence(name)) {
             return QRectF(rect());
@@ -643,10 +658,12 @@ private:
 
     void applySequenceGeometry(const QString &name) {
         const int oldCenterX = x() + width() / 2;
+        const double windowScale = windowScaleForSequence(name);
         const int newWidth = static_cast<int>(std::round(
-            basePetWidth_ * (isLateralSequence(name) ? kLateralVisualScale : 1.0)));
-        const int newHeight =
-            static_cast<int>(std::round(basePetWidth_ * kFrameAspect));
+            basePetWidth_ * windowScale));
+        const double heightScale = isJumpSequence(name) ? windowScale : 1.0;
+        const int newHeight = static_cast<int>(std::round(
+            basePetWidth_ * kFrameAspect * heightScale));
 
         resize(newWidth, newHeight);
         move(oldCenterX - newWidth / 2, groundBottom_ - newHeight);
