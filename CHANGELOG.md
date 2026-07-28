@@ -50,6 +50,8 @@ y el proyecto utiliza [versionado semántico](https://semver.org/lang/es/).
 - Las caminatas laterales amplían uniformemente la silueta y ensanchan el lienzo
   un 30 % sólo mientras duran, conservando el centro y la línea del suelo sin
   hacer que Planck crezca visualmente.
+- El salto amplía uniformemente la silueta y el lienzo un 20 % para conservar el
+  tamaño aparente sin recortar la trayectoria vertical.
 - El reposo frontal espontáneo baja al 4 %; caminar queda en 28 %, esperar
   sentado en 14 %, saludar en 12 %, trabajar en 9 %, revisar en 7 %, cada
   mirada en 6 %, correr de frente y tumbarse en 5 %, y saltar en 4 %.

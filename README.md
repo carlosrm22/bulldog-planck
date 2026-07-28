@@ -148,6 +148,10 @@ anticipación, ascenso, ápice, descenso y aterrizaje. El saludo sostiene la pat
 levantada, y la revisión pausa de forma intencional la mirada, la inclinación de
 cabeza y el parpadeo, sin alargar ninguna de las acciones.
 
+Durante el salto, Planck y su lienzo se amplían uniformemente un 20 %. Así las
+poses aéreas conservan el mismo ancho aparente que el reposo sin recortar el
+ápice ni modificar la trayectoria vertical.
+
 `failed` conserva su nombre de archivo por compatibilidad con el paquete
 gráfico, pero dentro de la mascota representa un descanso: Planck se tumba, se
 queda quieto unos 18 segundos y vuelve a levantarse. La pose acostada se sostiene
