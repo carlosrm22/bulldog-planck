@@ -11,8 +11,8 @@ y el proyecto utiliza [versionado semántico](https://semver.org/lang/es/).
 
 - Integración de `running` como carrera de frente.
 - Integración de `failed` como secuencia para tumbarse, descansar y levantarse.
-- Integración de `thinking-work` con seis escenas de trabajo.
-- Fundido de 350 ms entre escenas de trabajo, sostenidas durante 1.8 segundos.
+- Integración de `thinking-work` con seis escenas principales y once cuadros de
+  entrada, transición y salida.
 - Submenú de acciones para revisar, pensar o trabajar, correr y tumbarse.
 
 ### Cambiado
@@ -38,17 +38,19 @@ y el proyecto utiliza [versionado semántico](https://semver.org/lang/es/).
 - El saludo sostiene la pata elevada y la revisión incorpora pausas
   intencionales sin cambiar sus duraciones totales.
 - `look-a` y `look-b` parten y regresan a una pose neutral, completan siempre
-  sus ciclos de 2.78 segundos y utilizan fundidos de 70 ms.
+  sus ciclos de 2.78 segundos y cambian directamente entre cuadros para evitar
+  destellos de toda la figura.
 - El descanso tumbado conserva sus 13.8 segundos sin duplicar pixmaps en memoria
-  y aplica fundidos de 80 ms entre poses.
-- `thinking-work` conserva sus 10.8 segundos, con tiempos narrativos por escena
-  y fundidos completos al entrar, cambiar de actividad y salir.
-- El motor de fundido conserva el pixmap saliente para evitar mezclar índices
-  entre secuencias distintas.
-- `look-b` prescinde del fundido alfa entre cuadros para evitar que toda la
-  figura destelle al mirar hacia la izquierda.
+  y cambia directamente entre poses.
+- `thinking-work` conserva sus 10.8 segundos y pasa de seis poses con fundido a
+  17 cuadros continuos con transiciones físicas breves.
+- Se elimina el motor de fundido alfa para evitar que toda la figura destelle o
+  pierda opacidad al cambiar de cuadro en cualquier secuencia.
 - Las caminatas laterales amplían uniformemente la silueta y ensanchan el lienzo
   sólo mientras duran, conservando el centro y la línea del suelo.
+- `thinking-work` aumenta del 4 % al 8 % de las decisiones; `review` sube al
+  5 %, la carrera frontal al 4 % y cada mirada al 6 %. Caminar sigue siendo la
+  conducta principal con 34 % y el saludo la segunda con 14 %.
 
 ## [0.1.0] - 2026-07-24
 

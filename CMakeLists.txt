@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(bulldog-planck VERSION 0.2.0 LANGUAGES CXX)
+project(
+    bulldog-planck
+    VERSION 0.2.0
+    DESCRIPTION "Mascota animada de escritorio para Linux y KDE"
+    LANGUAGES CXX
+)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

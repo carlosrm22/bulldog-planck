@@ -3,7 +3,6 @@
 #include <QCursor>
 #include <QDesktopServices>
 #include <QDir>
-#include <QElapsedTimer>
 #include <QFile>
 #include <QFileInfo>
 #include <QGuiApplication>
@@ -49,15 +48,16 @@ constexpr std::array<int, 9> kLookBFrameIntervals{
     300, 150, 150, 140, 130, 140, 150, 180, 400};
 constexpr std::array<int, 8> kFailedFrameIntervals{
     230, 190, 170, 170, 12300, 230, 220, 290};
-constexpr std::array<int, 6> kThinkingWorkFrameIntervals{
-    2000, 1700, 2200, 1700, 1600, 1600};
+constexpr std::array<int, 17> kThinkingWorkFrameIntervals{
+    100, 140, 140, 1600, 150, 1500,
+    150, 2000, 150, 1500, 150, 1350,
+    150, 1320, 140, 160, 100};
 constexpr double kFrameAspect = 208.0 / 192.0;
 
 struct Sequence {
     QString name;
     int frameIntervalMs;
     bool loops = true;
-    int crossFadeMilliseconds = 0;
 };
 
 class PetWindow final : public QWidget {
@@ -84,17 +84,6 @@ public:
             advanceFrame();
         });
 
-        fadeTimer_.setInterval(16);
-        fadeTimer_.setTimerType(Qt::PreciseTimer);
-        connect(&fadeTimer_, &QTimer::timeout, this, [this] {
-            if (fadeClock_.elapsed() >= activeCrossFadeMilliseconds_) {
-                fadeTimer_.stop();
-                previousFrame_ = QPixmap();
-                activeCrossFadeMilliseconds_ = 0;
-            }
-            update();
-        });
-
         stateTimer_.setSingleShot(true);
         connect(&stateTimer_, &QTimer::timeout, this, [this] {
             finishCurrentState();
@@ -117,29 +106,9 @@ protected:
         painter.setRenderHint(QPainter::SmoothPixmapTransform, true);
 
         const QRectF targetRect = frameTargetRect(currentSequence_.name);
-        const auto drawFrame = [&painter, &targetRect](
-                                   const QPixmap &frame, qreal opacity) {
-            painter.setOpacity(opacity);
-            painter.drawPixmap(targetRect, frame, QRectF(frame.rect()));
-        };
         const QPixmap &currentFrame =
             sequenceIt->at(frameIndex_ % sequenceIt->size());
-
-        if (!previousFrame_.isNull()
-            && activeCrossFadeMilliseconds_ > 0
-            && fadeClock_.isValid()) {
-            const qreal progress = std::clamp(
-                static_cast<qreal>(fadeClock_.elapsed())
-                    / activeCrossFadeMilliseconds_,
-                0.0,
-                1.0);
-            drawFrame(previousFrame_, 1.0 - progress);
-            painter.setCompositionMode(QPainter::CompositionMode_Plus);
-            drawFrame(currentFrame, progress);
-            painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
-        } else {
-            drawFrame(currentFrame, 1.0);
-        }
+        painter.drawPixmap(targetRect, currentFrame, QRectF(currentFrame.rect()));
     }
 
     void mousePressEvent(QMouseEvent *event) override {
@@ -278,15 +247,15 @@ private:
     void loadFrames() {
         const QList<Sequence> sequences{
             {QStringLiteral("idle"), 260},
-            {QStringLiteral("look-a"), 210, true, 70},
+            {QStringLiteral("look-a"), 210, true},
             {QStringLiteral("look-b"), 210, true},
             {QStringLiteral("running-left"), 90},
             {QStringLiteral("running-right"), 90},
             {QStringLiteral("running"), 120},
             {QStringLiteral("waiting"), 220},
             {QStringLiteral("review"), 220},
-            {QStringLiteral("thinking-work"), 1800, false, 350},
-            {QStringLiteral("failed"), 230, false, 80},
+            {QStringLiteral("thinking-work"), 1800, false},
+            {QStringLiteral("failed"), 230, false},
             {QStringLiteral("waving"), 180},
             {QStringLiteral("jumping"), 130},
         };
@@ -309,8 +278,6 @@ private:
                 frames_.insert(sequence.name, std::move(pixmaps));
                 frameIntervals_.insert(sequence.name, sequence.frameIntervalMs);
                 sequenceLoops_.insert(sequence.name, sequence.loops);
-                crossFadeDurations_.insert(
-                    sequence.name, sequence.crossFadeMilliseconds);
             }
         }
 
@@ -371,33 +338,11 @@ private:
             return;
         }
 
-        QPixmap outgoingFrame;
-        const auto outgoingSequenceIt =
-            frames_.constFind(currentSequence_.name);
-        if (outgoingSequenceIt != frames_.cend()
-            && !outgoingSequenceIt->isEmpty()) {
-            outgoingFrame = outgoingSequenceIt->at(
-                frameIndex_ % outgoingSequenceIt->size());
-        }
-        const int transitionMilliseconds = std::max(
-            crossFadeDurations_.value(currentSequence_.name, 0),
-            crossFadeDurations_.value(name, 0));
-
         currentSequence_.name = name;
         currentSequence_.frameIntervalMs = frameIntervals_.value(name, 180);
         applySequenceGeometry(name);
         frameIndex_ = 0;
         frameDirection_ = 1;
-        if (!outgoingFrame.isNull() && transitionMilliseconds > 0) {
-            previousFrame_ = std::move(outgoingFrame);
-            activeCrossFadeMilliseconds_ = transitionMilliseconds;
-            fadeClock_.restart();
-            fadeTimer_.start();
-        } else {
-            previousFrame_ = QPixmap();
-            activeCrossFadeMilliseconds_ = 0;
-            fadeTimer_.stop();
-        }
         frameTimer_.start(intervalForFrame(name, frameIndex_));
 
         if (durationMs > 0) {
@@ -443,16 +388,6 @@ private:
         }
 
         if (nextFrame != frameIndex_) {
-            activeCrossFadeMilliseconds_ = crossFadeDurations_.value(
-                currentSequence_.name, 0);
-            if (activeCrossFadeMilliseconds_ > 0) {
-                previousFrame_ = sequenceIt->at(frameIndex_);
-                fadeClock_.restart();
-                fadeTimer_.start();
-            } else {
-                previousFrame_ = QPixmap();
-                fadeTimer_.stop();
-            }
             frameIndex_ = nextFrame;
         }
 
@@ -479,29 +414,29 @@ private:
         }
 
         const int roll = randomBetween(0, 99);
-        if (roll < 40) {
+        if (roll < 34) {
             beginWalk();
-        } else if (roll < 52) {
+        } else if (roll < 44) {
             setSequence(QStringLiteral("idle"), randomBetween(6000, 12000));
-        } else if (roll < 67) {
+        } else if (roll < 58) {
             setSequence(
                 QStringLiteral("waving"),
                 durationForCycles(QStringLiteral("waving"), 1));
-        } else if (roll < 72) {
+        } else if (roll < 64) {
             setSequence(
                 QStringLiteral("look-a"),
                 durationForPingPongCycles(QStringLiteral("look-a"), 1));
-        } else if (roll < 77) {
+        } else if (roll < 70) {
             setSequence(
                 QStringLiteral("look-b"),
                 durationForPingPongCycles(QStringLiteral("look-b"), 1));
-        } else if (roll < 87) {
+        } else if (roll < 80) {
             setSequence(QStringLiteral("waiting"), randomBetween(1600, 2800));
-        } else if (roll < 90) {
+        } else if (roll < 85) {
             setSequence(
                 QStringLiteral("review"),
                 durationForCycles(QStringLiteral("review"), 2));
-        } else if (roll < 94) {
+        } else if (roll < 93) {
             setSequence(
                 QStringLiteral("thinking-work"),
                 durationForCycles(QStringLiteral("thinking-work"), 1));
@@ -754,18 +689,13 @@ private:
     QHash<QString, QVector<QPixmap>> frames_;
     QHash<QString, int> frameIntervals_;
     QHash<QString, bool> sequenceLoops_;
-    QHash<QString, int> crossFadeDurations_;
     QSet<QString> pingPongSequences_;
     Sequence currentSequence_{QStringLiteral("idle"), 260};
     QTimer frameTimer_;
-    QTimer fadeTimer_;
     QTimer stateTimer_;
-    QElapsedTimer fadeClock_;
     QSettings settings_;
     int frameIndex_ = 0;
     int frameDirection_ = 1;
-    QPixmap previousFrame_;
-    int activeCrossFadeMilliseconds_ = 0;
     int groundBottom_ = 0;
     int basePetWidth_ = kMediumWidth;
     int movementStep_ = 4;

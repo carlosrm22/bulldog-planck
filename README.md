@@ -5,7 +5,8 @@
 <h1 align="center">Bulldog Planck</h1>
 
 <p align="center">
-  Una mascota animada que camina, descansa y te acompaña por el escritorio Linux.
+  Una mascota animada con 92 cuadros y 12 comportamientos que camina, trabaja,
+  descansa y te acompaña por el escritorio Linux.
 </p>
 
 <p align="center">
@@ -26,7 +27,7 @@ acompañantes de escritorio y en el plasmoide CatWalk de KDE.
 
 - Ventana transparente, sin bordes y siempre visible.
 - Movimiento real hacia la izquierda y la derecha.
-- 81 cuadros PNG con transparencia, distribuidos en 12 secuencias.
+- 92 cuadros PNG con transparencia, distribuidos en 12 secuencias.
 - Comportamientos aleatorios: caminar, correr de frente, descansar, mirar,
   esperar, pensar, trabajar, revisar, tumbarse, saludar y saltar.
 - Ritmo tranquilo: Planck reposa entre 5 y 9 segundos después de cada acción.
@@ -110,23 +111,23 @@ permite reproducir manualmente cualquiera de sus comportamientos especiales.
 | `look-b` | 9 | Mirar y bajar la cabeza en ida y vuelta |
 | `waiting` | 6 | Esperar sentado, respirar y parpadear |
 | `review` | 6 | Observar o revisar |
-| `thinking-work` | 6 | Pensar, investigar y trabajar |
+| `thinking-work` | 17 | Pensar, investigar y trabajar cuadro a cuadro |
 | `waving` | 4 | Saludar |
 | `jumping` | 5 | Saltar |
 | `running` | 6 | Trotar de frente |
 | `failed` | 8 | Tumbarse, descansar y volver a levantarse |
 
-`thinking-work` conserva 10.8 segundos totales y utiliza un fundido de
-350 milisegundos tanto entre actividades como al entrar y salir del modo de
-trabajo. Sus poses —laptop, escritura, pensamiento, investigación, revisión y
-tableta— duran respectivamente 2.0, 1.7, 2.2, 1.7, 1.6 y 1.6 segundos.
+`thinking-work` conserva 10.8 segundos totales. Sus seis actividades principales
+—laptop, escritura, pensamiento, investigación, revisión y tableta— se enlazan
+mediante poses físicas breves para sentarse, abrir y guardar objetos y volver a
+levantarse. La postura neutral exacta al principio y al final permite reproducir
+los 17 cuadros directamente, sin fundidos ni saltos al entrar o salir.
 
 Los ciclos laterales comparten exactamente las mismas poses reflejadas y
 mantienen las patas alineadas con el borde inferior. Las dos secuencias de mirada
-parten de la postura neutral de reposo, completan un ciclo de 2.78 segundos,
-regresan por sus propios cuadros. `look-a` utiliza un fundido breve de
-70 milisegundos; `look-b` cambia directamente entre cuadros para evitar un
-destello de transparencia al mirar hacia la izquierda.
+parten de la postura neutral de reposo, completan un ciclo de 2.78 segundos y
+regresan por sus propios cuadros. Ambas cambian directamente entre poses para
+evitar que toda la figura destelle al mirar hacia cualquiera de los dos lados.
 
 Al caminar hacia los lados, el lienzo se ensancha temporalmente y la silueta se
 amplía de forma uniforme un 45 %. Esto compensa la proporción horizontal de las
@@ -150,7 +151,30 @@ cabeza y el parpadeo, sin alargar ninguna de las acciones.
 gráfico, pero dentro de la mascota representa un descanso: Planck se tumba, se
 queda quieto unos 12 segundos y vuelve a levantarse. La pose acostada se sostiene
 mediante tiempo explícito, sin duplicar cuadros en memoria, y las transiciones
-usan un fundido de 80 milisegundos.
+cambian directamente entre poses.
+
+Todas las animaciones cambian directamente entre PNG opacos. El motor no mezcla
+la transparencia de dos cuadros, evitando destellos o pérdidas momentáneas de
+opacidad en toda la figura.
+
+## Frecuencia y ritmo
+
+Después de cada acción, Planck conserva una pausa tranquila de entre 5 y 9
+segundos. Al terminarla elige su siguiente conducta con esta distribución:
+
+| Conducta | Probabilidad |
+| --- | ---: |
+| Caminar de lado | 34 % |
+| Saludar | 14 % |
+| Reposar de pie | 10 % |
+| Esperar sentado | 10 % |
+| Pensar y trabajar | 8 % |
+| Mirar a la derecha | 6 % |
+| Mirar a la izquierda | 6 % |
+| Revisar | 5 % |
+| Correr de frente | 4 % |
+| Tumbarse y descansar | 2 % |
+| Saltar | 1 % |
 
 ## Actualizar
 
@@ -192,7 +216,6 @@ Consulta [CONTRIBUTING.md](CONTRIBUTING.md) antes de enviar cambios.
 ## Próximos pasos
 
 - Controles para velocidad de caminata.
-- Ajustes para frecuencia y duración de comportamientos.
 - Nuevos estados: dormir y jugar.
 - Selección de monitor y recorrido.
 - Paquetes AppImage, RPM y DEB.
