@@ -26,7 +26,7 @@ acompañantes de escritorio y en el plasmoide CatWalk de KDE.
 
 - Ventana transparente, sin bordes y siempre visible.
 - Movimiento real hacia la izquierda y la derecha.
-- 79 cuadros PNG con transparencia, distribuidos en 12 secuencias.
+- 81 cuadros PNG con transparencia, distribuidos en 12 secuencias.
 - Comportamientos aleatorios: caminar, correr de frente, descansar, mirar,
   esperar, pensar, trabajar, revisar, tumbarse, saludar y saltar.
 - Ritmo tranquilo: Planck reposa entre 5 y 9 segundos después de cada acción.
@@ -106,8 +106,8 @@ permite reproducir manualmente cualquiera de sus comportamientos especiales.
 | `idle` | 6 | Reposo automático |
 | `running-left` | 8 | Caminar hacia la izquierda |
 | `running-right` | 8 | Caminar hacia la derecha, como espejo exacto |
-| `look-a` | 8 | Mirar alrededor en ida y vuelta |
-| `look-b` | 8 | Mirar y bajar la cabeza en ida y vuelta |
+| `look-a` | 9 | Mirar alrededor en ida y vuelta |
+| `look-b` | 9 | Mirar y bajar la cabeza en ida y vuelta |
 | `waiting` | 6 | Esperar sentado, respirar y parpadear |
 | `review` | 6 | Observar o revisar |
 | `thinking-work` | 6 | Pensar, investigar y trabajar |
@@ -122,7 +122,8 @@ revisión y tableta— son escenas conceptuales, no cuadros de movimiento contin
 
 Los ciclos laterales comparten exactamente las mismas poses reflejadas y
 mantienen las patas alineadas con el borde inferior. Las dos secuencias de mirada
-regresan por sus propios cuadros para evitar un salto brusco al comenzar de nuevo.
+parten de la postura neutral de reposo, completan un ciclo de 2.78 segundos,
+regresan por sus propios cuadros y utilizan un fundido breve de 70 milisegundos.
 
 Durante `waiting`, Planck conserva una sola postura sentada, respira con un
 desplazamiento de un píxel y cierra los ojos durante 120 milisegundos. Así evita
@@ -139,7 +140,9 @@ cabeza y el parpadeo, sin alargar ninguna de las acciones.
 
 `failed` conserva su nombre de archivo por compatibilidad con el paquete
 gráfico, pero dentro de la mascota representa un descanso: Planck se tumba, se
-queda quieto unos 12 segundos y vuelve a levantarse.
+queda quieto unos 12 segundos y vuelve a levantarse. La pose acostada se sostiene
+mediante tiempo explícito, sin duplicar cuadros en memoria, y las transiciones
+usan un fundido de 80 milisegundos.
 
 ## Actualizar
 

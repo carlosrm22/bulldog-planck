@@ -32,7 +32,6 @@ namespace {
 constexpr int kSmallWidth = 115;
 constexpr int kMediumWidth = 154;
 constexpr int kLargeWidth = 192;
-constexpr int kRestHoldMilliseconds = 12000;
 constexpr int kQuietPauseMinimumMilliseconds = 5000;
 constexpr int kQuietPauseMaximumMilliseconds = 9000;
 constexpr int kBlinkChancePercent = 12;
@@ -43,6 +42,12 @@ constexpr std::array<int, 4> kWaveFrameIntervals{
     180, 140, 250, 150};
 constexpr std::array<int, 6> kReviewFrameIntervals{
     240, 180, 260, 180, 140, 320};
+constexpr std::array<int, 9> kLookAFrameIntervals{
+    300, 180, 150, 140, 130, 130, 140, 160, 420};
+constexpr std::array<int, 9> kLookBFrameIntervals{
+    300, 150, 150, 140, 130, 140, 150, 180, 400};
+constexpr std::array<int, 8> kFailedFrameIntervals{
+    230, 190, 170, 170, 12300, 230, 220, 290};
 constexpr double kFrameAspect = 208.0 / 192.0;
 
 struct Sequence {
@@ -267,15 +272,15 @@ private:
     void loadFrames() {
         const QList<Sequence> sequences{
             {QStringLiteral("idle"), 260},
-            {QStringLiteral("look-a"), 210},
-            {QStringLiteral("look-b"), 210},
+            {QStringLiteral("look-a"), 210, true, 70},
+            {QStringLiteral("look-b"), 210, true, 70},
             {QStringLiteral("running-left"), 90},
             {QStringLiteral("running-right"), 90},
             {QStringLiteral("running"), 120},
             {QStringLiteral("waiting"), 220},
             {QStringLiteral("review"), 220},
             {QStringLiteral("thinking-work"), 1800, false, 350},
-            {QStringLiteral("failed"), 230, false},
+            {QStringLiteral("failed"), 230, false, 80},
             {QStringLiteral("waving"), 180},
             {QStringLiteral("jumping"), 130},
         };
@@ -292,24 +297,6 @@ private:
                 if (!pixmap.isNull()) {
                     pixmaps.push_back(std::move(pixmap));
                 }
-            }
-
-            if (sequence.name == QStringLiteral("failed") && pixmaps.size() > 4) {
-                QVector<QPixmap> restingSequence;
-                const int repeatedFrames = std::max(
-                    1, kRestHoldMilliseconds / sequence.frameIntervalMs);
-                restingSequence.reserve(pixmaps.size() + repeatedFrames);
-                for (int index = 0; index < pixmaps.size(); ++index) {
-                    restingSequence.push_back(pixmaps.at(index));
-                    if (index == 4) {
-                        for (int repetition = 0;
-                             repetition < repeatedFrames;
-                             ++repetition) {
-                            restingSequence.push_back(pixmaps.at(index));
-                        }
-                    }
-                }
-                pixmaps = std::move(restingSequence);
             }
 
             if (!pixmaps.isEmpty()) {
@@ -340,6 +327,21 @@ private:
             && frameIndex >= 0
             && frameIndex < static_cast<int>(kReviewFrameIntervals.size())) {
             return kReviewFrameIntervals.at(frameIndex);
+        }
+        if (name == QStringLiteral("look-a")
+            && frameIndex >= 0
+            && frameIndex < static_cast<int>(kLookAFrameIntervals.size())) {
+            return kLookAFrameIntervals.at(frameIndex);
+        }
+        if (name == QStringLiteral("look-b")
+            && frameIndex >= 0
+            && frameIndex < static_cast<int>(kLookBFrameIntervals.size())) {
+            return kLookBFrameIntervals.at(frameIndex);
+        }
+        if (name == QStringLiteral("failed")
+            && frameIndex >= 0
+            && frameIndex < static_cast<int>(kFailedFrameIntervals.size())) {
+            return kFailedFrameIntervals.at(frameIndex);
         }
 
         const bool isBlinkingSequence =
@@ -454,9 +456,13 @@ private:
                 QStringLiteral("waving"),
                 durationForCycles(QStringLiteral("waving"), 1));
         } else if (roll < 72) {
-            setSequence(QStringLiteral("look-a"), randomBetween(1700, 3000));
+            setSequence(
+                QStringLiteral("look-a"),
+                durationForPingPongCycles(QStringLiteral("look-a"), 1));
         } else if (roll < 77) {
-            setSequence(QStringLiteral("look-b"), randomBetween(1700, 3000));
+            setSequence(
+                QStringLiteral("look-b"),
+                durationForPingPongCycles(QStringLiteral("look-b"), 1));
         } else if (roll < 87) {
             setSequence(QStringLiteral("waiting"), randomBetween(1600, 2800));
         } else if (roll < 90) {
@@ -506,8 +512,30 @@ private:
 
     int durationForCycles(const QString &name, int cycles) const {
         const int frameCount = frames_.value(name).size();
-        const int frameInterval = frameIntervals_.value(name, 180);
-        return frameCount * frameInterval * std::max(1, cycles);
+        int cycleDuration = 0;
+        for (int frameIndex = 0; frameIndex < frameCount; ++frameIndex) {
+            cycleDuration += intervalForFrame(name, frameIndex);
+        }
+        return cycleDuration * std::max(1, cycles);
+    }
+
+    int durationForPingPongCycles(const QString &name, int cycles) const {
+        const int frameCount = frames_.value(name).size();
+        if (frameCount == 0) {
+            return 0;
+        }
+
+        int cycleDuration = intervalForFrame(name, 0);
+        if (frameCount > 1) {
+            cycleDuration += intervalForFrame(name, frameCount - 1);
+            for (int frameIndex = 1;
+                 frameIndex < frameCount - 1;
+                 ++frameIndex) {
+                cycleDuration += 2 * intervalForFrame(name, frameIndex);
+            }
+        }
+
+        return cycleDuration * std::max(1, cycles);
     }
 
     void beginWalk() {

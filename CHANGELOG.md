@@ -37,6 +37,10 @@ y el proyecto utiliza [versionado semántico](https://semver.org/lang/es/).
   aterrizaje para transmitir más peso.
 - El saludo sostiene la pata elevada y la revisión incorpora pausas
   intencionales sin cambiar sus duraciones totales.
+- `look-a` y `look-b` parten y regresan a una pose neutral, completan siempre
+  sus ciclos de 2.78 segundos y utilizan fundidos de 70 ms.
+- El descanso tumbado conserva sus 13.8 segundos sin duplicar pixmaps en memoria
+  y aplica fundidos de 80 ms entre poses.
 
 ## [0.1.0] - 2026-07-24
 
