@@ -30,7 +30,7 @@ acompañantes de escritorio y en el plasmoide CatWalk de KDE.
 - 92 cuadros PNG con transparencia, distribuidos en 12 secuencias.
 - Comportamientos aleatorios: caminar, correr de frente, descansar, mirar,
   esperar, pensar, trabajar, revisar, tumbarse, saludar y saltar.
-- Ritmo tranquilo: Planck reposa entre 5 y 9 segundos después de cada acción.
+- Ritmo tranquilo: Planck reposa entre 3 y 5 segundos después de cada acción.
 - Parpadeos esporádicos y breves; caminar y saludar son sus gestos más habituales.
 - Tres tamaños seleccionables.
 - Posición y tamaño persistentes entre ejecuciones.
@@ -130,14 +130,15 @@ regresan por sus propios cuadros. Ambas cambian directamente entre poses para
 evitar que toda la figura destelle al mirar hacia cualquiera de los dos lados.
 
 Al caminar hacia los lados, el lienzo se ensancha temporalmente y la silueta se
-amplía de forma uniforme un 45 %. Esto compensa la proporción horizontal de las
+amplía de forma uniforme un 30 %. Esto compensa la proporción horizontal de las
 poses laterales sin aplastar, recortar ni hacer que Planck parezca encogerse; al
 terminar el paseo recupera automáticamente el tamaño normal elegido en el menú.
 
-Durante `waiting`, Planck conserva una sola postura sentada, respira con un
-desplazamiento de un píxel y cierra los ojos durante 120 milisegundos. Así evita
-los saltos de cuerpo y perspectiva que tenía la secuencia original. Esta espera
-representa ahora el 10 % de sus decisiones espontáneas.
+Durante `waiting`, Planck conserva una sola postura sentada entre 6 y 10
+segundos, respira con un desplazamiento de un píxel y cierra los ojos durante
+120 milisegundos sólo en el 20 % de las vueltas. Así evita parpadear
+repetitivamente durante una espera larga. Esta conducta representa ahora el
+14 % de sus decisiones espontáneas.
 
 El trote frontal alterna dos poses coherentes con un rebote vertical máximo de
 dos píxeles, manteniendo fija la identidad y el centro horizontal de Planck.
@@ -149,7 +150,7 @@ cabeza y el parpadeo, sin alargar ninguna de las acciones.
 
 `failed` conserva su nombre de archivo por compatibilidad con el paquete
 gráfico, pero dentro de la mascota representa un descanso: Planck se tumba, se
-queda quieto unos 12 segundos y vuelve a levantarse. La pose acostada se sostiene
+queda quieto unos 18 segundos y vuelve a levantarse. La pose acostada se sostiene
 mediante tiempo explícito, sin duplicar cuadros en memoria, y las transiciones
 cambian directamente entre poses.
 
@@ -159,22 +160,22 @@ opacidad en toda la figura.
 
 ## Frecuencia y ritmo
 
-Después de cada acción, Planck conserva una pausa tranquila de entre 5 y 9
+Después de cada acción, Planck conserva una pausa tranquila de entre 3 y 5
 segundos. Al terminarla elige su siguiente conducta con esta distribución:
 
 | Conducta | Probabilidad |
 | --- | ---: |
-| Caminar de lado | 34 % |
-| Saludar | 14 % |
-| Reposar de pie | 10 % |
-| Esperar sentado | 10 % |
-| Pensar y trabajar | 8 % |
+| Caminar de lado | 28 % |
+| Esperar sentado | 14 % |
+| Saludar | 12 % |
+| Pensar y trabajar | 9 % |
+| Revisar | 7 % |
 | Mirar a la derecha | 6 % |
 | Mirar a la izquierda | 6 % |
-| Revisar | 5 % |
-| Correr de frente | 4 % |
-| Tumbarse y descansar | 2 % |
-| Saltar | 1 % |
+| Correr de frente | 5 % |
+| Tumbarse y descansar | 5 % |
+| Reposar de pie | 4 % |
+| Saltar | 4 % |
 
 ## Actualizar
 
