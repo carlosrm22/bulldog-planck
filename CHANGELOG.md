@@ -45,6 +45,8 @@ y el proyecto utiliza [versionado semántico](https://semver.org/lang/es/).
   y fundidos completos al entrar, cambiar de actividad y salir.
 - El motor de fundido conserva el pixmap saliente para evitar mezclar índices
   entre secuencias distintas.
+- El cierre de ojos al iniciar y terminar `look-b` baja de 150 a 70 ms; el ciclo
+  conserva 2.78 segundos sosteniendo más tiempo la mirada extrema.
 
 ## [0.1.0] - 2026-07-24
 

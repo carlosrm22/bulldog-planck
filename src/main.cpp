@@ -45,7 +45,7 @@ constexpr std::array<int, 6> kReviewFrameIntervals{
 constexpr std::array<int, 9> kLookAFrameIntervals{
     300, 180, 150, 140, 130, 130, 140, 160, 420};
 constexpr std::array<int, 9> kLookBFrameIntervals{
-    300, 150, 150, 140, 130, 140, 150, 180, 400};
+    300, 70, 150, 140, 130, 140, 150, 180, 560};
 constexpr std::array<int, 8> kFailedFrameIntervals{
     230, 190, 170, 170, 12300, 230, 220, 290};
 constexpr std::array<int, 6> kThinkingWorkFrameIntervals{
