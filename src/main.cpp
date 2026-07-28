@@ -16,6 +16,7 @@
 #include <QPixmap>
 #include <QRandomGenerator>
 #include <QScreen>
+#include <QSet>
 #include <QSettings>
 #include <QStandardPaths>
 #include <QTimer>
@@ -312,6 +313,9 @@ private:
                     sequence.name, sequence.crossFadeMilliseconds);
             }
         }
+
+        pingPongSequences_.insert(QStringLiteral("look-a"));
+        pingPongSequences_.insert(QStringLiteral("look-b"));
     }
 
     void setSequence(const QString &name, int durationMs) {
@@ -322,6 +326,7 @@ private:
         currentSequence_.name = name;
         currentSequence_.frameIntervalMs = frameIntervals_.value(name, 180);
         frameIndex_ = 0;
+        frameDirection_ = 1;
         previousFrameIndex_ = -1;
         activeCrossFadeMilliseconds_ = 0;
         fadeTimer_.stop();
@@ -341,9 +346,20 @@ private:
             return;
         }
 
-        const int lastFrame = sequenceIt->size() - 1;
+        const int frameCount = sequenceIt->size();
+        const int lastFrame = frameCount - 1;
         int nextFrame = frameIndex_;
-        if (frameIndex_ < lastFrame) {
+        if (pingPongSequences_.contains(currentSequence_.name)
+            && frameCount > 1) {
+            nextFrame = frameIndex_ + frameDirection_;
+            if (nextFrame >= frameCount) {
+                frameDirection_ = -1;
+                nextFrame = lastFrame - 1;
+            } else if (nextFrame < 0) {
+                frameDirection_ = 1;
+                nextFrame = 1;
+            }
+        } else if (frameIndex_ < lastFrame) {
             nextFrame = frameIndex_ + 1;
         } else if (sequenceLoops_.value(currentSequence_.name, true)) {
             nextFrame = 0;
@@ -614,6 +630,7 @@ private:
     QHash<QString, int> frameIntervals_;
     QHash<QString, bool> sequenceLoops_;
     QHash<QString, int> crossFadeDurations_;
+    QSet<QString> pingPongSequences_;
     Sequence currentSequence_{QStringLiteral("idle"), 260};
     QTimer frameTimer_;
     QTimer fadeTimer_;
@@ -621,6 +638,7 @@ private:
     QElapsedTimer fadeClock_;
     QSettings settings_;
     int frameIndex_ = 0;
+    int frameDirection_ = 1;
     int previousFrameIndex_ = -1;
     int activeCrossFadeMilliseconds_ = 0;
     int groundBottom_ = 0;

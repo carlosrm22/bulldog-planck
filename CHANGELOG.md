@@ -23,6 +23,10 @@ y el proyecto utiliza [versionado semántico](https://semver.org/lang/es/).
 - El parpadeo durante el reposo es menos frecuente y mantiene el ojo cerrado
   durante menos tiempo.
 - El saludo aparece con mayor frecuencia en la rutina espontánea.
+- Los ciclos de caminata mantienen una altura uniforme y el sentido derecho es
+  el reflejo exacto del izquierdo.
+- `look-a` y `look-b` se reproducen en ida y vuelta para evitar saltos al
+  reiniciar la secuencia.
 
 ## [0.1.0] - 2026-07-24
 

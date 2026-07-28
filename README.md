@@ -105,9 +105,9 @@ permite reproducir manualmente cualquiera de sus comportamientos especiales.
 | --- | ---: | --- |
 | `idle` | 6 | Reposo automático |
 | `running-left` | 8 | Caminar hacia la izquierda |
-| `running-right` | 8 | Caminar hacia la derecha |
-| `look-a` | 8 | Mirar alrededor |
-| `look-b` | 8 | Mirar y bajar la cabeza |
+| `running-right` | 8 | Caminar hacia la derecha, como espejo exacto |
+| `look-a` | 8 | Mirar alrededor en ida y vuelta |
+| `look-b` | 8 | Mirar y bajar la cabeza en ida y vuelta |
 | `waiting` | 6 | Esperar |
 | `review` | 6 | Observar o revisar |
 | `thinking-work` | 6 | Pensar, investigar y trabajar |
@@ -119,6 +119,10 @@ permite reproducir manualmente cualquiera de sus comportamientos especiales.
 `thinking-work` cambia de escena cada 1.8 segundos y utiliza un fundido de
 350 milisegundos. Sus poses —laptop, escritura, pensamiento, investigación,
 revisión y tableta— son escenas conceptuales, no cuadros de movimiento continuo.
+
+Los ciclos laterales comparten exactamente las mismas poses reflejadas y
+mantienen las patas alineadas con el borde inferior. Las dos secuencias de mirada
+regresan por sus propios cuadros para evitar un salto brusco al comenzar de nuevo.
 
 `failed` conserva su nombre de archivo por compatibilidad con el paquete
 gráfico, pero dentro de la mascota representa un descanso: Planck se tumba, se
