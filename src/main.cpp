@@ -48,6 +48,8 @@ constexpr std::array<int, 9> kLookBFrameIntervals{
     300, 150, 150, 140, 130, 140, 150, 180, 400};
 constexpr std::array<int, 8> kFailedFrameIntervals{
     230, 190, 170, 170, 12300, 230, 220, 290};
+constexpr std::array<int, 6> kThinkingWorkFrameIntervals{
+    2000, 1700, 2200, 1700, 1600, 1600};
 constexpr double kFrameAspect = 208.0 / 192.0;
 
 struct Sequence {
@@ -86,7 +88,8 @@ public:
         connect(&fadeTimer_, &QTimer::timeout, this, [this] {
             if (fadeClock_.elapsed() >= activeCrossFadeMilliseconds_) {
                 fadeTimer_.stop();
-                previousFrameIndex_ = -1;
+                previousFrame_ = QPixmap();
+                activeCrossFadeMilliseconds_ = 0;
             }
             update();
         });
@@ -112,14 +115,15 @@ protected:
         QPainter painter(this);
         painter.setRenderHint(QPainter::SmoothPixmapTransform, true);
 
-        const auto drawFrame = [this, &painter, &sequenceIt](
-                                   int index, qreal opacity) {
+        const auto drawFrame = [this, &painter](
+                                   const QPixmap &frame, qreal opacity) {
             painter.setOpacity(opacity);
-            painter.drawPixmap(
-                rect(), sequenceIt->at(index % sequenceIt->size()));
+            painter.drawPixmap(rect(), frame);
         };
+        const QPixmap &currentFrame =
+            sequenceIt->at(frameIndex_ % sequenceIt->size());
 
-        if (previousFrameIndex_ >= 0
+        if (!previousFrame_.isNull()
             && activeCrossFadeMilliseconds_ > 0
             && fadeClock_.isValid()) {
             const qreal progress = std::clamp(
@@ -127,12 +131,12 @@ protected:
                     / activeCrossFadeMilliseconds_,
                 0.0,
                 1.0);
-            drawFrame(previousFrameIndex_, 1.0 - progress);
+            drawFrame(previousFrame_, 1.0 - progress);
             painter.setCompositionMode(QPainter::CompositionMode_Plus);
-            drawFrame(frameIndex_, progress);
+            drawFrame(currentFrame, progress);
             painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
         } else {
-            drawFrame(frameIndex_, 1.0);
+            drawFrame(currentFrame, 1.0);
         }
     }
 
@@ -343,6 +347,12 @@ private:
             && frameIndex < static_cast<int>(kFailedFrameIntervals.size())) {
             return kFailedFrameIntervals.at(frameIndex);
         }
+        if (name == QStringLiteral("thinking-work")
+            && frameIndex >= 0
+            && frameIndex
+                < static_cast<int>(kThinkingWorkFrameIntervals.size())) {
+            return kThinkingWorkFrameIntervals.at(frameIndex);
+        }
 
         const bool isBlinkingSequence =
             name == QStringLiteral("idle")
@@ -359,13 +369,32 @@ private:
             return;
         }
 
+        QPixmap outgoingFrame;
+        const auto outgoingSequenceIt =
+            frames_.constFind(currentSequence_.name);
+        if (outgoingSequenceIt != frames_.cend()
+            && !outgoingSequenceIt->isEmpty()) {
+            outgoingFrame = outgoingSequenceIt->at(
+                frameIndex_ % outgoingSequenceIt->size());
+        }
+        const int transitionMilliseconds = std::max(
+            crossFadeDurations_.value(currentSequence_.name, 0),
+            crossFadeDurations_.value(name, 0));
+
         currentSequence_.name = name;
         currentSequence_.frameIntervalMs = frameIntervals_.value(name, 180);
         frameIndex_ = 0;
         frameDirection_ = 1;
-        previousFrameIndex_ = -1;
-        activeCrossFadeMilliseconds_ = 0;
-        fadeTimer_.stop();
+        if (!outgoingFrame.isNull() && transitionMilliseconds > 0) {
+            previousFrame_ = std::move(outgoingFrame);
+            activeCrossFadeMilliseconds_ = transitionMilliseconds;
+            fadeClock_.restart();
+            fadeTimer_.start();
+        } else {
+            previousFrame_ = QPixmap();
+            activeCrossFadeMilliseconds_ = 0;
+            fadeTimer_.stop();
+        }
         frameTimer_.start(intervalForFrame(name, frameIndex_));
 
         if (durationMs > 0) {
@@ -414,11 +443,11 @@ private:
             activeCrossFadeMilliseconds_ = crossFadeDurations_.value(
                 currentSequence_.name, 0);
             if (activeCrossFadeMilliseconds_ > 0) {
-                previousFrameIndex_ = frameIndex_;
+                previousFrame_ = sequenceIt->at(frameIndex_);
                 fadeClock_.restart();
                 fadeTimer_.start();
             } else {
-                previousFrameIndex_ = -1;
+                previousFrame_ = QPixmap();
                 fadeTimer_.stop();
             }
             frameIndex_ = nextFrame;
@@ -702,7 +731,7 @@ private:
     QSettings settings_;
     int frameIndex_ = 0;
     int frameDirection_ = 1;
-    int previousFrameIndex_ = -1;
+    QPixmap previousFrame_;
     int activeCrossFadeMilliseconds_ = 0;
     int groundBottom_ = 0;
     int movementStep_ = 4;
