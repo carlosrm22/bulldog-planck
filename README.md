@@ -124,9 +124,9 @@ tableta— duran respectivamente 2.0, 1.7, 2.2, 1.7, 1.6 y 1.6 segundos.
 Los ciclos laterales comparten exactamente las mismas poses reflejadas y
 mantienen las patas alineadas con el borde inferior. Las dos secuencias de mirada
 parten de la postura neutral de reposo, completan un ciclo de 2.78 segundos,
-regresan por sus propios cuadros y utilizan un fundido breve de 70 milisegundos.
-En `look-b`, el cuadro con los ojos cerrados dura sólo 70 milisegundos y el
-tiempo recuperado se sostiene en la mirada extrema.
+regresan por sus propios cuadros. `look-a` utiliza un fundido breve de
+70 milisegundos; `look-b` cambia directamente entre cuadros para evitar un
+destello de transparencia al mirar hacia la izquierda.
 
 Durante `waiting`, Planck conserva una sola postura sentada, respira con un
 desplazamiento de un píxel y cierra los ojos durante 120 milisegundos. Así evita
