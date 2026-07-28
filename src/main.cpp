@@ -414,23 +414,23 @@ private:
         const int roll = randomBetween(0, 99);
         if (roll < 40) {
             beginWalk();
-        } else if (roll < 55) {
+        } else if (roll < 52) {
             setSequence(QStringLiteral("idle"), randomBetween(6000, 12000));
-        } else if (roll < 70) {
+        } else if (roll < 67) {
             setSequence(
                 QStringLiteral("waving"),
                 durationForCycles(QStringLiteral("waving"), 1));
-        } else if (roll < 76) {
+        } else if (roll < 72) {
             setSequence(QStringLiteral("look-a"), randomBetween(1700, 3000));
-        } else if (roll < 82) {
+        } else if (roll < 77) {
             setSequence(QStringLiteral("look-b"), randomBetween(1700, 3000));
         } else if (roll < 87) {
             setSequence(QStringLiteral("waiting"), randomBetween(1600, 2800));
-        } else if (roll < 91) {
+        } else if (roll < 90) {
             setSequence(
                 QStringLiteral("review"),
                 durationForCycles(QStringLiteral("review"), 2));
-        } else if (roll < 95) {
+        } else if (roll < 94) {
             setSequence(
                 QStringLiteral("thinking-work"),
                 durationForCycles(QStringLiteral("thinking-work"), 1));

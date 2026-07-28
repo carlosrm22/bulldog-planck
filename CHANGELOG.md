@@ -30,6 +30,9 @@ y el proyecto utiliza [versionado semántico](https://semver.org/lang/es/).
 - `idle-05` conserva la identidad visual de la postura de reposo.
 - `waiting` mantiene una postura sentada estable, con respiración de un píxel y
   un parpadeo de 120 ms.
+- La espera sentada aumenta del 5 % al 10 % de las decisiones espontáneas.
+- `running` utiliza un trote frontal coherente con dos poses y un rebote máximo
+  de dos píxeles.
 
 ## [0.1.0] - 2026-07-24
 

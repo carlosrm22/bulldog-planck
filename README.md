@@ -113,7 +113,7 @@ permite reproducir manualmente cualquiera de sus comportamientos especiales.
 | `thinking-work` | 6 | Pensar, investigar y trabajar |
 | `waving` | 4 | Saludar |
 | `jumping` | 5 | Saltar |
-| `running` | 6 | Correr de frente |
+| `running` | 6 | Trotar de frente |
 | `failed` | 8 | Tumbarse, descansar y volver a levantarse |
 
 `thinking-work` cambia de escena cada 1.8 segundos y utiliza un fundido de
@@ -126,7 +126,11 @@ regresan por sus propios cuadros para evitar un salto brusco al comenzar de nuev
 
 Durante `waiting`, Planck conserva una sola postura sentada, respira con un
 desplazamiento de un píxel y cierra los ojos durante 120 milisegundos. Así evita
-los saltos de cuerpo y perspectiva que tenía la secuencia original.
+los saltos de cuerpo y perspectiva que tenía la secuencia original. Esta espera
+representa ahora el 10 % de sus decisiones espontáneas.
+
+El trote frontal alterna dos poses coherentes con un rebote vertical máximo de
+dos píxeles, manteniendo fija la identidad y el centro horizontal de Planck.
 
 `failed` conserva su nombre de archivo por compatibilidad con el paquete
 gráfico, pero dentro de la mascota representa un descanso: Planck se tumba, se
