@@ -24,6 +24,7 @@
 #include <QWidget>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 
 namespace {
@@ -36,6 +37,12 @@ constexpr int kQuietPauseMinimumMilliseconds = 5000;
 constexpr int kQuietPauseMaximumMilliseconds = 9000;
 constexpr int kBlinkChancePercent = 12;
 constexpr int kBlinkClosedMilliseconds = 120;
+constexpr std::array<int, 5> kJumpFrameIntervals{
+    170, 100, 110, 100, 170};
+constexpr std::array<int, 4> kWaveFrameIntervals{
+    180, 140, 250, 150};
+constexpr std::array<int, 6> kReviewFrameIntervals{
+    240, 180, 260, 180, 140, 320};
 constexpr double kFrameAspect = 208.0 / 192.0;
 
 struct Sequence {
@@ -318,6 +325,33 @@ private:
         pingPongSequences_.insert(QStringLiteral("look-b"));
     }
 
+    int intervalForFrame(const QString &name, int frameIndex) const {
+        if (name == QStringLiteral("jumping")
+            && frameIndex >= 0
+            && frameIndex < static_cast<int>(kJumpFrameIntervals.size())) {
+            return kJumpFrameIntervals.at(frameIndex);
+        }
+        if (name == QStringLiteral("waving")
+            && frameIndex >= 0
+            && frameIndex < static_cast<int>(kWaveFrameIntervals.size())) {
+            return kWaveFrameIntervals.at(frameIndex);
+        }
+        if (name == QStringLiteral("review")
+            && frameIndex >= 0
+            && frameIndex < static_cast<int>(kReviewFrameIntervals.size())) {
+            return kReviewFrameIntervals.at(frameIndex);
+        }
+
+        const bool isBlinkingSequence =
+            name == QStringLiteral("idle")
+            || name == QStringLiteral("waiting");
+        if (isBlinkingSequence && frameIndex == 2) {
+            return kBlinkClosedMilliseconds;
+        }
+
+        return frameIntervals_.value(name, 180);
+    }
+
     void setSequence(const QString &name, int durationMs) {
         if (!frames_.contains(name)) {
             return;
@@ -330,7 +364,7 @@ private:
         previousFrameIndex_ = -1;
         activeCrossFadeMilliseconds_ = 0;
         fadeTimer_.stop();
-        frameTimer_.start(currentSequence_.frameIntervalMs);
+        frameTimer_.start(intervalForFrame(name, frameIndex_));
 
         if (durationMs > 0) {
             stateTimer_.start(durationMs);
@@ -388,9 +422,8 @@ private:
             frameIndex_ = nextFrame;
         }
 
-        const int nextFrameInterval = isBlinkingSequence && frameIndex_ == 2
-            ? kBlinkClosedMilliseconds
-            : currentSequence_.frameIntervalMs;
+        const int nextFrameInterval =
+            intervalForFrame(currentSequence_.name, frameIndex_);
         if (frameTimer_.interval() != nextFrameInterval) {
             frameTimer_.setInterval(nextFrameInterval);
         }

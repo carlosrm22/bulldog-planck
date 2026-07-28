@@ -132,6 +132,11 @@ representa ahora el 10 % de sus decisiones espontáneas.
 El trote frontal alterna dos poses coherentes con un rebote vertical máximo de
 dos píxeles, manteniendo fija la identidad y el centro horizontal de Planck.
 
+El salto conserva sus 650 milisegundos, pero reparte el tiempo entre
+anticipación, ascenso, ápice, descenso y aterrizaje. El saludo sostiene la pata
+levantada, y la revisión pausa de forma intencional la mirada, la inclinación de
+cabeza y el parpadeo, sin alargar ninguna de las acciones.
+
 `failed` conserva su nombre de archivo por compatibilidad con el paquete
 gráfico, pero dentro de la mascota representa un descanso: Planck se tumba, se
 queda quieto unos 12 segundos y vuelve a levantarse.

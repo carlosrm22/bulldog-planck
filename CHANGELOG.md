@@ -33,6 +33,10 @@ y el proyecto utiliza [versionado semántico](https://semver.org/lang/es/).
 - La espera sentada aumenta del 5 % al 10 % de las decisiones espontáneas.
 - `running` utiliza un trote frontal coherente con dos poses y un rebote máximo
   de dos píxeles.
+- El salto distribuye sus 650 ms entre anticipación, ascenso, ápice, descenso y
+  aterrizaje para transmitir más peso.
+- El saludo sostiene la pata elevada y la revisión incorpora pausas
+  intencionales sin cambiar sus duraciones totales.
 
 ## [0.1.0] - 2026-07-24
 
