@@ -36,6 +36,7 @@ constexpr int kQuietPauseMinimumMilliseconds = 5000;
 constexpr int kQuietPauseMaximumMilliseconds = 9000;
 constexpr int kBlinkChancePercent = 12;
 constexpr int kBlinkClosedMilliseconds = 120;
+constexpr double kLateralVisualScale = 1.45;
 constexpr std::array<int, 5> kJumpFrameIntervals{
     170, 100, 110, 100, 170};
 constexpr std::array<int, 4> kWaveFrameIntervals{
@@ -115,10 +116,11 @@ protected:
         QPainter painter(this);
         painter.setRenderHint(QPainter::SmoothPixmapTransform, true);
 
-        const auto drawFrame = [this, &painter](
+        const QRectF targetRect = frameTargetRect(currentSequence_.name);
+        const auto drawFrame = [&painter, &targetRect](
                                    const QPixmap &frame, qreal opacity) {
             painter.setOpacity(opacity);
-            painter.drawPixmap(rect(), frame);
+            painter.drawPixmap(targetRect, frame, QRectF(frame.rect()));
         };
         const QPixmap &currentFrame =
             sequenceIt->at(frameIndex_ % sequenceIt->size());
@@ -383,6 +385,7 @@ private:
 
         currentSequence_.name = name;
         currentSequence_.frameIntervalMs = frameIntervals_.value(name, 180);
+        applySequenceGeometry(name);
         frameIndex_ = 0;
         frameDirection_ = 1;
         if (!outgoingFrame.isNull() && transitionMilliseconds > 0) {
@@ -649,13 +652,10 @@ private:
 
     void setPetWidth(int newWidth, bool persist = true) {
         const int oldBottom = groundBottom_ > 0 ? groundBottom_ : y() + height();
-        resize(newWidth, static_cast<int>(std::round(newWidth * kFrameAspect)));
+        basePetWidth_ = newWidth;
         groundBottom_ = oldBottom;
-        if (isVisible()) {
-            clampToCurrentScreen();
-        }
+        applySequenceGeometry(currentSequence_.name);
         if (persist) {
-            settings_.setValue(QStringLiteral("petWidth"), newWidth);
             savePosition();
         }
     }
@@ -663,17 +663,50 @@ private:
     void addSizeAction(QMenu *menu, const QString &label, int width) {
         QAction *action = menu->addAction(label);
         action->setCheckable(true);
-        action->setChecked(this->width() == width);
+        action->setChecked(basePetWidth_ == width);
         connect(action, &QAction::triggered, this, [this, width] {
             setPetWidth(width);
         });
     }
 
     void savePosition() {
-        settings_.setValue(QStringLiteral("x"), x());
+        const int normalWidthOffset = (width() - basePetWidth_) / 2;
+        settings_.setValue(QStringLiteral("x"), x() + normalWidthOffset);
         settings_.setValue(QStringLiteral("groundBottom"), groundBottom_);
-        settings_.setValue(QStringLiteral("petWidth"), width());
+        settings_.setValue(QStringLiteral("petWidth"), basePetWidth_);
         settings_.sync();
+    }
+
+    static bool isLateralSequence(const QString &name) {
+        return name == QStringLiteral("running-left")
+            || name == QStringLiteral("running-right");
+    }
+
+    QRectF frameTargetRect(const QString &name) const {
+        if (!isLateralSequence(name)) {
+            return QRectF(rect());
+        }
+
+        const qreal scaledHeight = height() * kLateralVisualScale;
+        return QRectF(
+            0.0,
+            height() - scaledHeight,
+            width(),
+            scaledHeight);
+    }
+
+    void applySequenceGeometry(const QString &name) {
+        const int oldCenterX = x() + width() / 2;
+        const int newWidth = static_cast<int>(std::round(
+            basePetWidth_ * (isLateralSequence(name) ? kLateralVisualScale : 1.0)));
+        const int newHeight =
+            static_cast<int>(std::round(basePetWidth_ * kFrameAspect));
+
+        resize(newWidth, newHeight);
+        move(oldCenterX - newWidth / 2, groundBottom_ - newHeight);
+        if (isVisible()) {
+            clampToCurrentScreen();
+        }
     }
 
     QString autostartPath() const {
@@ -734,6 +767,7 @@ private:
     QPixmap previousFrame_;
     int activeCrossFadeMilliseconds_ = 0;
     int groundBottom_ = 0;
+    int basePetWidth_ = kMediumWidth;
     int movementStep_ = 4;
     bool paused_ = false;
     bool dragging_ = false;

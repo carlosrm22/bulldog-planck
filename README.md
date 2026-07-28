@@ -128,6 +128,11 @@ regresan por sus propios cuadros. `look-a` utiliza un fundido breve de
 70 milisegundos; `look-b` cambia directamente entre cuadros para evitar un
 destello de transparencia al mirar hacia la izquierda.
 
+Al caminar hacia los lados, el lienzo se ensancha temporalmente y la silueta se
+amplía de forma uniforme un 45 %. Esto compensa la proporción horizontal de las
+poses laterales sin aplastar, recortar ni hacer que Planck parezca encogerse; al
+terminar el paseo recupera automáticamente el tamaño normal elegido en el menú.
+
 Durante `waiting`, Planck conserva una sola postura sentada, respira con un
 desplazamiento de un píxel y cierra los ojos durante 120 milisegundos. Así evita
 los saltos de cuerpo y perspectiva que tenía la secuencia original. Esta espera
