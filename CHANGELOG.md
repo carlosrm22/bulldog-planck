@@ -7,10 +7,50 @@ y el proyecto utiliza [versionado semántico](https://semver.org/lang/es/).
 
 ## [Sin publicar]
 
-### Planeado
+### Añadido
 
-- Preferencias para velocidad y frecuencia de comportamientos.
-- Nuevos estados animados, incluyendo dormir y leer.
+- Integración de `running` como carrera de frente.
+- Integración de `failed` como secuencia para tumbarse, descansar y levantarse.
+- Integración de `thinking-work` con seis escenas principales y once cuadros de
+  entrada, transición y salida.
+- Submenú de acciones para revisar, pensar o trabajar, correr y tumbarse.
+
+### Cambiado
+
+- `review` vuelve a presentarse como la animación breve de revisión.
+- Planck permanece tumbado unos 12 segundos antes de volver a levantarse.
+- Después de cada acción hay una pausa tranquila de entre 5 y 9 segundos.
+- El parpadeo durante el reposo es menos frecuente y mantiene el ojo cerrado
+  durante menos tiempo.
+- El saludo aparece con mayor frecuencia en la rutina espontánea.
+- Los ciclos de caminata mantienen una altura uniforme y el sentido derecho es
+  el reflejo exacto del izquierdo.
+- `look-a` y `look-b` se reproducen en ida y vuelta para evitar saltos al
+  reiniciar la secuencia.
+- `idle-05` conserva la identidad visual de la postura de reposo.
+- `waiting` mantiene una postura sentada estable, con respiración de un píxel y
+  un parpadeo de 120 ms.
+- La espera sentada aumenta del 5 % al 10 % de las decisiones espontáneas.
+- `running` utiliza un trote frontal coherente con dos poses y un rebote máximo
+  de dos píxeles.
+- El salto distribuye sus 650 ms entre anticipación, ascenso, ápice, descenso y
+  aterrizaje para transmitir más peso.
+- El saludo sostiene la pata elevada y la revisión incorpora pausas
+  intencionales sin cambiar sus duraciones totales.
+- `look-a` y `look-b` parten y regresan a una pose neutral, completan siempre
+  sus ciclos de 2.78 segundos y cambian directamente entre cuadros para evitar
+  destellos de toda la figura.
+- El descanso tumbado conserva sus 13.8 segundos sin duplicar pixmaps en memoria
+  y cambia directamente entre poses.
+- `thinking-work` conserva sus 10.8 segundos y pasa de seis poses con fundido a
+  17 cuadros continuos con transiciones físicas breves.
+- Se elimina el motor de fundido alfa para evitar que toda la figura destelle o
+  pierda opacidad al cambiar de cuadro en cualquier secuencia.
+- Las caminatas laterales amplían uniformemente la silueta y ensanchan el lienzo
+  sólo mientras duran, conservando el centro y la línea del suelo.
+- `thinking-work` aumenta del 4 % al 8 % de las decisiones; `review` sube al
+  5 %, la carrera frontal al 4 % y cada mirada al 6 %. Caminar sigue siendo la
+  conducta principal con 34 % y el saludo la segunda con 14 %.
 
 ## [0.1.0] - 2026-07-24
 

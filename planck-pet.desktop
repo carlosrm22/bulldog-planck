@@ -2,7 +2,7 @@
 Type=Application
 Name=Planck
 GenericName=Mascota de escritorio
-Comment=Planck camina y descansa en tu escritorio
+Comment=Planck camina, trabaja, descansa y te acompaña en el escritorio
 Exec=planck-pet
 Icon=planck-pet
 Terminal=false

@@ -5,7 +5,8 @@
 <h1 align="center">Bulldog Planck</h1>
 
 <p align="center">
-  Una mascota animada que camina, descansa y te acompaña por el escritorio Linux.
+  Una mascota animada con 92 cuadros y 12 comportamientos que camina, trabaja,
+  descansa y te acompaña por el escritorio Linux.
 </p>
 
 <p align="center">
@@ -26,9 +27,11 @@ acompañantes de escritorio y en el plasmoide CatWalk de KDE.
 
 - Ventana transparente, sin bordes y siempre visible.
 - Movimiento real hacia la izquierda y la derecha.
-- 73 cuadros PNG con transparencia, distribuidos en 11 secuencias.
-- Comportamientos aleatorios: caminar, descansar, mirar, esperar, revisar,
-  saludar y saltar.
+- 92 cuadros PNG con transparencia, distribuidos en 12 secuencias.
+- Comportamientos aleatorios: caminar, correr de frente, descansar, mirar,
+  esperar, pensar, trabajar, revisar, tumbarse, saludar y saltar.
+- Ritmo tranquilo: Planck reposa entre 5 y 9 segundos después de cada acción.
+- Parpadeos esporádicos y breves; caminar y saludar son sus gestos más habituales.
 - Tres tamaños seleccionables.
 - Posición y tamaño persistentes entre ejecuciones.
 - Soporte para varios monitores.
@@ -94,7 +97,8 @@ planck-pet
 | Clic derecho | Abre el menú de controles |
 
 Desde el menú contextual puedes pausarlo, cambiar su tamaño, devolverlo al borde
-inferior, activar el inicio con la sesión o salir.
+inferior, activar el inicio con la sesión o salir. El submenú **Acciones**
+permite reproducir manualmente cualquiera de sus comportamientos especiales.
 
 ## Animaciones incluidas
 
@@ -102,19 +106,75 @@ inferior, activar el inicio con la sesión o salir.
 | --- | ---: | --- |
 | `idle` | 6 | Reposo automático |
 | `running-left` | 8 | Caminar hacia la izquierda |
-| `running-right` | 8 | Caminar hacia la derecha |
-| `look-a` | 8 | Mirar alrededor |
-| `look-b` | 8 | Mirar y bajar la cabeza |
-| `waiting` | 6 | Esperar |
+| `running-right` | 8 | Caminar hacia la derecha, como espejo exacto |
+| `look-a` | 9 | Mirar alrededor en ida y vuelta |
+| `look-b` | 9 | Mirar y bajar la cabeza en ida y vuelta |
+| `waiting` | 6 | Esperar sentado, respirar y parpadear |
 | `review` | 6 | Observar o revisar |
+| `thinking-work` | 17 | Pensar, investigar y trabajar cuadro a cuadro |
 | `waving` | 4 | Saludar |
 | `jumping` | 5 | Saltar |
-| `running` | 6 | Incluida; comportamiento pendiente |
-| `failed` | 8 | Incluida; comportamiento pendiente |
+| `running` | 6 | Trotar de frente |
+| `failed` | 8 | Tumbarse, descansar y volver a levantarse |
 
-Los paquetes gráficos iniciales no contienen una secuencia llamada `reading` o
-“leyendo”. Si aparece el paquete original con esa animación, la incorporaremos
-como un estado adicional.
+`thinking-work` conserva 10.8 segundos totales. Sus seis actividades principales
+—laptop, escritura, pensamiento, investigación, revisión y tableta— se enlazan
+mediante poses físicas breves para sentarse, abrir y guardar objetos y volver a
+levantarse. La postura neutral exacta al principio y al final permite reproducir
+los 17 cuadros directamente, sin fundidos ni saltos al entrar o salir.
+
+Los ciclos laterales comparten exactamente las mismas poses reflejadas y
+mantienen las patas alineadas con el borde inferior. Las dos secuencias de mirada
+parten de la postura neutral de reposo, completan un ciclo de 2.78 segundos y
+regresan por sus propios cuadros. Ambas cambian directamente entre poses para
+evitar que toda la figura destelle al mirar hacia cualquiera de los dos lados.
+
+Al caminar hacia los lados, el lienzo se ensancha temporalmente y la silueta se
+amplía de forma uniforme un 45 %. Esto compensa la proporción horizontal de las
+poses laterales sin aplastar, recortar ni hacer que Planck parezca encogerse; al
+terminar el paseo recupera automáticamente el tamaño normal elegido en el menú.
+
+Durante `waiting`, Planck conserva una sola postura sentada, respira con un
+desplazamiento de un píxel y cierra los ojos durante 120 milisegundos. Así evita
+los saltos de cuerpo y perspectiva que tenía la secuencia original. Esta espera
+representa ahora el 10 % de sus decisiones espontáneas.
+
+El trote frontal alterna dos poses coherentes con un rebote vertical máximo de
+dos píxeles, manteniendo fija la identidad y el centro horizontal de Planck.
+
+El salto conserva sus 650 milisegundos, pero reparte el tiempo entre
+anticipación, ascenso, ápice, descenso y aterrizaje. El saludo sostiene la pata
+levantada, y la revisión pausa de forma intencional la mirada, la inclinación de
+cabeza y el parpadeo, sin alargar ninguna de las acciones.
+
+`failed` conserva su nombre de archivo por compatibilidad con el paquete
+gráfico, pero dentro de la mascota representa un descanso: Planck se tumba, se
+queda quieto unos 12 segundos y vuelve a levantarse. La pose acostada se sostiene
+mediante tiempo explícito, sin duplicar cuadros en memoria, y las transiciones
+cambian directamente entre poses.
+
+Todas las animaciones cambian directamente entre PNG opacos. El motor no mezcla
+la transparencia de dos cuadros, evitando destellos o pérdidas momentáneas de
+opacidad en toda la figura.
+
+## Frecuencia y ritmo
+
+Después de cada acción, Planck conserva una pausa tranquila de entre 5 y 9
+segundos. Al terminarla elige su siguiente conducta con esta distribución:
+
+| Conducta | Probabilidad |
+| --- | ---: |
+| Caminar de lado | 34 % |
+| Saludar | 14 % |
+| Reposar de pie | 10 % |
+| Esperar sentado | 10 % |
+| Pensar y trabajar | 8 % |
+| Mirar a la derecha | 6 % |
+| Mirar a la izquierda | 6 % |
+| Revisar | 5 % |
+| Correr de frente | 4 % |
+| Tumbarse y descansar | 2 % |
+| Saltar | 1 % |
 
 ## Actualizar
 
@@ -156,8 +216,7 @@ Consulta [CONTRIBUTING.md](CONTRIBUTING.md) antes de enviar cambios.
 ## Próximos pasos
 
 - Controles para velocidad de caminata.
-- Ajustes para frecuencia y duración de comportamientos.
-- Nuevos estados: dormir, leer y jugar.
+- Nuevos estados: dormir y jugar.
 - Selección de monitor y recorrido.
 - Paquetes AppImage, RPM y DEB.
 - Traducciones y pruebas en otros escritorios.

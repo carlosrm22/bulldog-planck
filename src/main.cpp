@@ -15,6 +15,7 @@
 #include <QPixmap>
 #include <QRandomGenerator>
 #include <QScreen>
+#include <QSet>
 #include <QSettings>
 #include <QStandardPaths>
 #include <QTimer>
@@ -22,6 +23,7 @@
 #include <QWidget>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 
 namespace {
@@ -29,11 +31,33 @@ namespace {
 constexpr int kSmallWidth = 115;
 constexpr int kMediumWidth = 154;
 constexpr int kLargeWidth = 192;
+constexpr int kQuietPauseMinimumMilliseconds = 5000;
+constexpr int kQuietPauseMaximumMilliseconds = 9000;
+constexpr int kBlinkChancePercent = 12;
+constexpr int kBlinkClosedMilliseconds = 120;
+constexpr double kLateralVisualScale = 1.45;
+constexpr std::array<int, 5> kJumpFrameIntervals{
+    170, 100, 110, 100, 170};
+constexpr std::array<int, 4> kWaveFrameIntervals{
+    180, 140, 250, 150};
+constexpr std::array<int, 6> kReviewFrameIntervals{
+    240, 180, 260, 180, 140, 320};
+constexpr std::array<int, 9> kLookAFrameIntervals{
+    300, 180, 150, 140, 130, 130, 140, 160, 420};
+constexpr std::array<int, 9> kLookBFrameIntervals{
+    300, 150, 150, 140, 130, 140, 150, 180, 400};
+constexpr std::array<int, 8> kFailedFrameIntervals{
+    230, 190, 170, 170, 12300, 230, 220, 290};
+constexpr std::array<int, 17> kThinkingWorkFrameIntervals{
+    100, 140, 140, 1600, 150, 1500,
+    150, 2000, 150, 1500, 150, 1350,
+    150, 1320, 140, 160, 100};
 constexpr double kFrameAspect = 208.0 / 192.0;
 
 struct Sequence {
     QString name;
     int frameIntervalMs;
+    bool loops = true;
 };
 
 class PetWindow final : public QWidget {
@@ -62,13 +86,13 @@ public:
 
         stateTimer_.setSingleShot(true);
         connect(&stateTimer_, &QTimer::timeout, this, [this] {
-            chooseNextState();
+            finishCurrentState();
         });
 
         const int savedWidth = settings_.value(QStringLiteral("petWidth"), kMediumWidth).toInt();
         setPetWidth(std::clamp(savedWidth, kSmallWidth, kLargeWidth), false);
         restorePosition();
-        setSequence(QStringLiteral("idle"), randomBetween(2500, 4500));
+        beginQuietPause();
     }
 
 protected:
@@ -78,10 +102,13 @@ protected:
             return;
         }
 
-        const QPixmap &frame = sequenceIt->at(frameIndex_ % sequenceIt->size());
         QPainter painter(this);
         painter.setRenderHint(QPainter::SmoothPixmapTransform, true);
-        painter.drawPixmap(rect(), frame);
+
+        const QRectF targetRect = frameTargetRect(currentSequence_.name);
+        const QPixmap &currentFrame =
+            sequenceIt->at(frameIndex_ % sequenceIt->size());
+        painter.drawPixmap(targetRect, currentFrame, QRectF(currentFrame.rect()));
     }
 
     void mousePressEvent(QMouseEvent *event) override {
@@ -117,7 +144,9 @@ protected:
             clampToCurrentScreen();
             savePosition();
             if (!dragged_) {
-                setSequence(QStringLiteral("waving"), 4 * 180);
+                setSequence(
+                    QStringLiteral("waving"),
+                    durationForCycles(QStringLiteral("waving"), 1));
             }
             event->accept();
             return;
@@ -127,7 +156,9 @@ protected:
 
     void mouseDoubleClickEvent(QMouseEvent *event) override {
         if (event->button() == Qt::LeftButton) {
-            setSequence(QStringLiteral("jumping"), 5 * 130);
+            setSequence(
+                QStringLiteral("jumping"),
+                durationForCycles(QStringLiteral("jumping"), 1));
             event->accept();
             return;
         }
@@ -143,11 +174,37 @@ protected:
         pauseAction->setCheckable(true);
         pauseAction->setChecked(paused_);
 
-        menu.addAction(QStringLiteral("Saludar"), this, [this] {
-            setSequence(QStringLiteral("waving"), 4 * 180);
+        QMenu *actionsMenu = menu.addMenu(QStringLiteral("Acciones"));
+        actionsMenu->addAction(QStringLiteral("Saludar"), this, [this] {
+            setSequence(
+                QStringLiteral("waving"),
+                durationForCycles(QStringLiteral("waving"), 1));
         });
-        menu.addAction(QStringLiteral("Saltar"), this, [this] {
-            setSequence(QStringLiteral("jumping"), 5 * 130);
+        actionsMenu->addAction(QStringLiteral("Saltar"), this, [this] {
+            setSequence(
+                QStringLiteral("jumping"),
+                durationForCycles(QStringLiteral("jumping"), 1));
+        });
+        actionsMenu->addSeparator();
+        actionsMenu->addAction(QStringLiteral("Revisar"), this, [this] {
+            setSequence(
+                QStringLiteral("review"),
+                durationForCycles(QStringLiteral("review"), 2));
+        });
+        actionsMenu->addAction(QStringLiteral("Pensar / trabajar"), this, [this] {
+            setSequence(
+                QStringLiteral("thinking-work"),
+                durationForCycles(QStringLiteral("thinking-work"), 1));
+        });
+        actionsMenu->addAction(QStringLiteral("Correr hacia ti"), this, [this] {
+            setSequence(
+                QStringLiteral("running"),
+                durationForCycles(QStringLiteral("running"), 3));
+        });
+        actionsMenu->addAction(QStringLiteral("Tumbarse y descansar"), this, [this] {
+            setSequence(
+                QStringLiteral("failed"),
+                durationForCycles(QStringLiteral("failed"), 1));
         });
 
         QMenu *sizeMenu = menu.addMenu(QStringLiteral("Tamaño"));
@@ -190,14 +247,15 @@ private:
     void loadFrames() {
         const QList<Sequence> sequences{
             {QStringLiteral("idle"), 260},
-            {QStringLiteral("look-a"), 210},
-            {QStringLiteral("look-b"), 210},
+            {QStringLiteral("look-a"), 210, true},
+            {QStringLiteral("look-b"), 210, true},
             {QStringLiteral("running-left"), 90},
             {QStringLiteral("running-right"), 90},
             {QStringLiteral("running"), 120},
             {QStringLiteral("waiting"), 220},
             {QStringLiteral("review"), 220},
-            {QStringLiteral("failed"), 230},
+            {QStringLiteral("thinking-work"), 1800, false},
+            {QStringLiteral("failed"), 230, false},
             {QStringLiteral("waving"), 180},
             {QStringLiteral("jumping"), 130},
         };
@@ -219,8 +277,60 @@ private:
             if (!pixmaps.isEmpty()) {
                 frames_.insert(sequence.name, std::move(pixmaps));
                 frameIntervals_.insert(sequence.name, sequence.frameIntervalMs);
+                sequenceLoops_.insert(sequence.name, sequence.loops);
             }
         }
+
+        pingPongSequences_.insert(QStringLiteral("look-a"));
+        pingPongSequences_.insert(QStringLiteral("look-b"));
+    }
+
+    int intervalForFrame(const QString &name, int frameIndex) const {
+        if (name == QStringLiteral("jumping")
+            && frameIndex >= 0
+            && frameIndex < static_cast<int>(kJumpFrameIntervals.size())) {
+            return kJumpFrameIntervals.at(frameIndex);
+        }
+        if (name == QStringLiteral("waving")
+            && frameIndex >= 0
+            && frameIndex < static_cast<int>(kWaveFrameIntervals.size())) {
+            return kWaveFrameIntervals.at(frameIndex);
+        }
+        if (name == QStringLiteral("review")
+            && frameIndex >= 0
+            && frameIndex < static_cast<int>(kReviewFrameIntervals.size())) {
+            return kReviewFrameIntervals.at(frameIndex);
+        }
+        if (name == QStringLiteral("look-a")
+            && frameIndex >= 0
+            && frameIndex < static_cast<int>(kLookAFrameIntervals.size())) {
+            return kLookAFrameIntervals.at(frameIndex);
+        }
+        if (name == QStringLiteral("look-b")
+            && frameIndex >= 0
+            && frameIndex < static_cast<int>(kLookBFrameIntervals.size())) {
+            return kLookBFrameIntervals.at(frameIndex);
+        }
+        if (name == QStringLiteral("failed")
+            && frameIndex >= 0
+            && frameIndex < static_cast<int>(kFailedFrameIntervals.size())) {
+            return kFailedFrameIntervals.at(frameIndex);
+        }
+        if (name == QStringLiteral("thinking-work")
+            && frameIndex >= 0
+            && frameIndex
+                < static_cast<int>(kThinkingWorkFrameIntervals.size())) {
+            return kThinkingWorkFrameIntervals.at(frameIndex);
+        }
+
+        const bool isBlinkingSequence =
+            name == QStringLiteral("idle")
+            || name == QStringLiteral("waiting");
+        if (isBlinkingSequence && frameIndex == 2) {
+            return kBlinkClosedMilliseconds;
+        }
+
+        return frameIntervals_.value(name, 180);
     }
 
     void setSequence(const QString &name, int durationMs) {
@@ -230,8 +340,10 @@ private:
 
         currentSequence_.name = name;
         currentSequence_.frameIntervalMs = frameIntervals_.value(name, 180);
+        applySequenceGeometry(name);
         frameIndex_ = 0;
-        frameTimer_.start(currentSequence_.frameIntervalMs);
+        frameDirection_ = 1;
+        frameTimer_.start(intervalForFrame(name, frameIndex_));
 
         if (durationMs > 0) {
             stateTimer_.start(durationMs);
@@ -247,7 +359,43 @@ private:
             return;
         }
 
-        frameIndex_ = (frameIndex_ + 1) % sequenceIt->size();
+        const int frameCount = sequenceIt->size();
+        const int lastFrame = frameCount - 1;
+        int nextFrame = frameIndex_;
+        if (pingPongSequences_.contains(currentSequence_.name)
+            && frameCount > 1) {
+            nextFrame = frameIndex_ + frameDirection_;
+            if (nextFrame >= frameCount) {
+                frameDirection_ = -1;
+                nextFrame = lastFrame - 1;
+            } else if (nextFrame < 0) {
+                frameDirection_ = 1;
+                nextFrame = 1;
+            }
+        } else if (frameIndex_ < lastFrame) {
+            nextFrame = frameIndex_ + 1;
+        } else if (sequenceLoops_.value(currentSequence_.name, true)) {
+            nextFrame = 0;
+        }
+
+        const bool isIdle = currentSequence_.name == QStringLiteral("idle");
+        const bool isWaiting = currentSequence_.name == QStringLiteral("waiting");
+        const bool isBlinkingSequence = isIdle || isWaiting;
+        const bool wouldBlink = isBlinkingSequence && nextFrame == 2;
+        if (wouldBlink && isIdle
+            && QRandomGenerator::global()->bounded(100) >= kBlinkChancePercent) {
+            nextFrame = 3;
+        }
+
+        if (nextFrame != frameIndex_) {
+            frameIndex_ = nextFrame;
+        }
+
+        const int nextFrameInterval =
+            intervalForFrame(currentSequence_.name, frameIndex_);
+        if (frameTimer_.interval() != nextFrameInterval) {
+            frameTimer_.setInterval(nextFrameInterval);
+        }
 
         if (!paused_ && !dragging_) {
             if (currentSequence_.name == QStringLiteral("running-left")) {
@@ -266,23 +414,95 @@ private:
         }
 
         const int roll = randomBetween(0, 99);
-        if (roll < 48) {
+        if (roll < 34) {
             beginWalk();
-        } else if (roll < 68) {
-            setSequence(QStringLiteral("idle"), randomBetween(2500, 6000));
-        } else if (roll < 76) {
-            setSequence(QStringLiteral("look-a"), randomBetween(1700, 3000));
-        } else if (roll < 84) {
-            setSequence(QStringLiteral("look-b"), randomBetween(1700, 3000));
-        } else if (roll < 90) {
+        } else if (roll < 44) {
+            setSequence(QStringLiteral("idle"), randomBetween(6000, 12000));
+        } else if (roll < 58) {
+            setSequence(
+                QStringLiteral("waving"),
+                durationForCycles(QStringLiteral("waving"), 1));
+        } else if (roll < 64) {
+            setSequence(
+                QStringLiteral("look-a"),
+                durationForPingPongCycles(QStringLiteral("look-a"), 1));
+        } else if (roll < 70) {
+            setSequence(
+                QStringLiteral("look-b"),
+                durationForPingPongCycles(QStringLiteral("look-b"), 1));
+        } else if (roll < 80) {
             setSequence(QStringLiteral("waiting"), randomBetween(1600, 2800));
-        } else if (roll < 94) {
-            setSequence(QStringLiteral("review"), randomBetween(1500, 2600));
-        } else if (roll < 98) {
-            setSequence(QStringLiteral("waving"), 4 * 180);
+        } else if (roll < 85) {
+            setSequence(
+                QStringLiteral("review"),
+                durationForCycles(QStringLiteral("review"), 2));
+        } else if (roll < 93) {
+            setSequence(
+                QStringLiteral("thinking-work"),
+                durationForCycles(QStringLiteral("thinking-work"), 1));
+        } else if (roll < 97) {
+            setSequence(
+                QStringLiteral("running"),
+                durationForCycles(QStringLiteral("running"), randomBetween(2, 4)));
+        } else if (roll < 99) {
+            setSequence(
+                QStringLiteral("failed"),
+                durationForCycles(QStringLiteral("failed"), 1));
         } else {
-            setSequence(QStringLiteral("jumping"), 5 * 130);
+            setSequence(
+                QStringLiteral("jumping"),
+                durationForCycles(QStringLiteral("jumping"), 1));
         }
+    }
+
+    void finishCurrentState() {
+        if (paused_) {
+            setSequence(QStringLiteral("idle"), 0);
+            return;
+        }
+
+        if (currentSequence_.name == QStringLiteral("idle")) {
+            chooseNextState();
+            return;
+        }
+
+        beginQuietPause();
+    }
+
+    void beginQuietPause() {
+        setSequence(
+            QStringLiteral("idle"),
+            randomBetween(
+                kQuietPauseMinimumMilliseconds,
+                kQuietPauseMaximumMilliseconds));
+    }
+
+    int durationForCycles(const QString &name, int cycles) const {
+        const int frameCount = frames_.value(name).size();
+        int cycleDuration = 0;
+        for (int frameIndex = 0; frameIndex < frameCount; ++frameIndex) {
+            cycleDuration += intervalForFrame(name, frameIndex);
+        }
+        return cycleDuration * std::max(1, cycles);
+    }
+
+    int durationForPingPongCycles(const QString &name, int cycles) const {
+        const int frameCount = frames_.value(name).size();
+        if (frameCount == 0) {
+            return 0;
+        }
+
+        int cycleDuration = intervalForFrame(name, 0);
+        if (frameCount > 1) {
+            cycleDuration += intervalForFrame(name, frameCount - 1);
+            for (int frameIndex = 1;
+                 frameIndex < frameCount - 1;
+                 ++frameIndex) {
+                cycleDuration += 2 * intervalForFrame(name, frameIndex);
+            }
+        }
+
+        return cycleDuration * std::max(1, cycles);
     }
 
     void beginWalk() {
@@ -367,13 +587,10 @@ private:
 
     void setPetWidth(int newWidth, bool persist = true) {
         const int oldBottom = groundBottom_ > 0 ? groundBottom_ : y() + height();
-        resize(newWidth, static_cast<int>(std::round(newWidth * kFrameAspect)));
+        basePetWidth_ = newWidth;
         groundBottom_ = oldBottom;
-        if (isVisible()) {
-            clampToCurrentScreen();
-        }
+        applySequenceGeometry(currentSequence_.name);
         if (persist) {
-            settings_.setValue(QStringLiteral("petWidth"), newWidth);
             savePosition();
         }
     }
@@ -381,17 +598,50 @@ private:
     void addSizeAction(QMenu *menu, const QString &label, int width) {
         QAction *action = menu->addAction(label);
         action->setCheckable(true);
-        action->setChecked(this->width() == width);
+        action->setChecked(basePetWidth_ == width);
         connect(action, &QAction::triggered, this, [this, width] {
             setPetWidth(width);
         });
     }
 
     void savePosition() {
-        settings_.setValue(QStringLiteral("x"), x());
+        const int normalWidthOffset = (width() - basePetWidth_) / 2;
+        settings_.setValue(QStringLiteral("x"), x() + normalWidthOffset);
         settings_.setValue(QStringLiteral("groundBottom"), groundBottom_);
-        settings_.setValue(QStringLiteral("petWidth"), width());
+        settings_.setValue(QStringLiteral("petWidth"), basePetWidth_);
         settings_.sync();
+    }
+
+    static bool isLateralSequence(const QString &name) {
+        return name == QStringLiteral("running-left")
+            || name == QStringLiteral("running-right");
+    }
+
+    QRectF frameTargetRect(const QString &name) const {
+        if (!isLateralSequence(name)) {
+            return QRectF(rect());
+        }
+
+        const qreal scaledHeight = height() * kLateralVisualScale;
+        return QRectF(
+            0.0,
+            height() - scaledHeight,
+            width(),
+            scaledHeight);
+    }
+
+    void applySequenceGeometry(const QString &name) {
+        const int oldCenterX = x() + width() / 2;
+        const int newWidth = static_cast<int>(std::round(
+            basePetWidth_ * (isLateralSequence(name) ? kLateralVisualScale : 1.0)));
+        const int newHeight =
+            static_cast<int>(std::round(basePetWidth_ * kFrameAspect));
+
+        resize(newWidth, newHeight);
+        move(oldCenterX - newWidth / 2, groundBottom_ - newHeight);
+        if (isVisible()) {
+            clampToCurrentScreen();
+        }
     }
 
     QString autostartPath() const {
@@ -438,12 +688,16 @@ private:
     QString framesRoot_;
     QHash<QString, QVector<QPixmap>> frames_;
     QHash<QString, int> frameIntervals_;
+    QHash<QString, bool> sequenceLoops_;
+    QSet<QString> pingPongSequences_;
     Sequence currentSequence_{QStringLiteral("idle"), 260};
     QTimer frameTimer_;
     QTimer stateTimer_;
     QSettings settings_;
     int frameIndex_ = 0;
+    int frameDirection_ = 1;
     int groundBottom_ = 0;
+    int basePetWidth_ = kMediumWidth;
     int movementStep_ = 4;
     bool paused_ = false;
     bool dragging_ = false;
@@ -485,7 +739,7 @@ int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
     QCoreApplication::setApplicationName(QStringLiteral("planck-pet"));
     QCoreApplication::setOrganizationName(QStringLiteral("Carlos"));
-    QCoreApplication::setApplicationVersion(QStringLiteral("1.0.0"));
+    QCoreApplication::setApplicationVersion(QStringLiteral(PLANCK_VERSION));
     app.setQuitOnLastWindowClosed(true);
 
     const QString runtimeDir = QStandardPaths::writableLocation(QStandardPaths::RuntimeLocation);
