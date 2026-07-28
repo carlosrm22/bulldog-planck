@@ -366,8 +366,10 @@ private:
         }
 
         const bool isIdle = currentSequence_.name == QStringLiteral("idle");
-        const bool wouldBlink = isIdle && nextFrame == 2;
-        if (wouldBlink
+        const bool isWaiting = currentSequence_.name == QStringLiteral("waiting");
+        const bool isBlinkingSequence = isIdle || isWaiting;
+        const bool wouldBlink = isBlinkingSequence && nextFrame == 2;
+        if (wouldBlink && isIdle
             && QRandomGenerator::global()->bounded(100) >= kBlinkChancePercent) {
             nextFrame = 3;
         }
@@ -386,7 +388,7 @@ private:
             frameIndex_ = nextFrame;
         }
 
-        const int nextFrameInterval = isIdle && frameIndex_ == 2
+        const int nextFrameInterval = isBlinkingSequence && frameIndex_ == 2
             ? kBlinkClosedMilliseconds
             : currentSequence_.frameIntervalMs;
         if (frameTimer_.interval() != nextFrameInterval) {
