@@ -13,6 +13,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 include(GNUInstallDirs)
 find_package(Qt6 6.4 REQUIRED COMPONENTS Widgets)
+find_package(X11 REQUIRED COMPONENTS xcb)
 
 qt_standard_project_setup()
 
@@ -20,7 +21,7 @@ qt_add_executable(planck-pet
     src/main.cpp
 )
 
-target_link_libraries(planck-pet PRIVATE Qt6::Widgets)
+target_link_libraries(planck-pet PRIVATE Qt6::Widgets X11::xcb)
 target_compile_definitions(planck-pet PRIVATE PLANCK_VERSION="${PROJECT_VERSION}")
 
 install(TARGETS planck-pet

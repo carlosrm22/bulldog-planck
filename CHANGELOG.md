@@ -7,6 +7,11 @@ y el proyecto utiliza [versionado semántico](https://semver.org/lang/es/).
 
 ## [Sin publicar]
 
+### Corregido
+
+- El autoarranque espera hasta 30 segundos a que XWayland acepte conexiones,
+  evitando que Qt aborte si KDE inicia Planck antes que el servidor X.
+
 ### Añadido
 
 - Integración de `running` como carrera de frente.

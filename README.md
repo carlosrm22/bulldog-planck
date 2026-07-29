@@ -63,13 +63,13 @@ XWayland.
 En Fedora:
 
 ```bash
-sudo dnf install gcc-c++ cmake qt6-qtbase-devel xorg-x11-server-Xwayland
+sudo dnf install gcc-c++ cmake libxcb-devel qt6-qtbase-devel xorg-x11-server-Xwayland
 ```
 
 En Debian o Ubuntu:
 
 ```bash
-sudo apt install build-essential cmake qt6-base-dev xwayland
+sudo apt install build-essential cmake libxcb1-dev qt6-base-dev xwayland
 ```
 
 Después:

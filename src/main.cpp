@@ -3,6 +3,7 @@
 #include <QCursor>
 #include <QDesktopServices>
 #include <QDir>
+#include <QElapsedTimer>
 #include <QFile>
 #include <QFileInfo>
 #include <QGuiApplication>
@@ -18,9 +19,12 @@
 #include <QSet>
 #include <QSettings>
 #include <QStandardPaths>
+#include <QThread>
 #include <QTimer>
 #include <QUrl>
 #include <QWidget>
+
+#include <xcb/xcb.h>
 
 #include <algorithm>
 #include <array>
@@ -40,6 +44,8 @@ constexpr int kWaitingMaximumMilliseconds = 10000;
 constexpr int kBlinkChancePercent = 12;
 constexpr int kWaitingBlinkChancePercent = 20;
 constexpr int kBlinkClosedMilliseconds = 120;
+constexpr int kXWaylandStartupTimeoutMilliseconds = 30000;
+constexpr int kXWaylandRetryMilliseconds = 250;
 constexpr double kLateralVisualScale = 1.30;
 constexpr double kJumpVisualScale = 1.20;
 constexpr std::array<int, 5> kJumpFrameIntervals{
@@ -65,6 +71,30 @@ struct Sequence {
     int frameIntervalMs;
     bool loops = true;
 };
+
+bool waitForXWayland() {
+    if (qEnvironmentVariableIsEmpty("DISPLAY")) {
+        return false;
+    }
+
+    QElapsedTimer timer;
+    timer.start();
+    do {
+        int preferredScreen = 0;
+        xcb_connection_t *connection = xcb_connect(nullptr, &preferredScreen);
+        const bool connected = connection != nullptr
+            && xcb_connection_has_error(connection) == 0;
+        if (connection != nullptr) {
+            xcb_disconnect(connection);
+        }
+        if (connected) {
+            return true;
+        }
+        QThread::msleep(kXWaylandRetryMilliseconds);
+    } while (timer.elapsed() < kXWaylandStartupTimeoutMilliseconds);
+
+    return false;
+}
 
 class PetWindow final : public QWidget {
 public:
@@ -763,6 +793,11 @@ int main(int argc, char *argv[]) {
     // KWin/Wayland intentionally restricts clients from moving top-level windows.
     // XWayland gives this small, transparent desktop companion predictable movement.
     qputenv("QT_QPA_PLATFORM", QByteArrayLiteral("xcb"));
+    if (!waitForXWayland()) {
+        qCritical("Planck could not connect to XWayland after %d ms.",
+                  kXWaylandStartupTimeoutMilliseconds);
+        return 3;
+    }
 
     QApplication app(argc, argv);
     QCoreApplication::setApplicationName(QStringLiteral("planck-pet"));
