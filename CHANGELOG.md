@@ -11,6 +11,8 @@ y el proyecto utiliza [versionado semántico](https://semver.org/lang/es/).
 
 - El autoarranque espera hasta 30 segundos a que XWayland acepte conexiones,
   evitando que Qt aborte si KDE inicia Planck antes que el servidor X.
+- El autoarranque localiza el socket de XWayland aunque Plasma todavía no haya
+  exportado `DISPLAY`, en vez de abandonar el inicio inmediatamente.
 
 ### Añadido
 

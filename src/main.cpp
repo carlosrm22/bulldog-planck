@@ -73,23 +73,48 @@ struct Sequence {
 };
 
 bool waitForXWayland() {
-    if (qEnvironmentVariableIsEmpty("DISPLAY")) {
-        return false;
-    }
-
     QElapsedTimer timer;
     timer.start();
     do {
-        int preferredScreen = 0;
-        xcb_connection_t *connection = xcb_connect(nullptr, &preferredScreen);
-        const bool connected = connection != nullptr
-            && xcb_connection_has_error(connection) == 0;
-        if (connection != nullptr) {
-            xcb_disconnect(connection);
+        QStringList displays;
+        const QString inheritedDisplay = qEnvironmentVariable("DISPLAY");
+        if (!inheritedDisplay.isEmpty()) {
+            displays.append(inheritedDisplay);
         }
-        if (connected) {
-            return true;
+
+        const QDir socketDirectory(QStringLiteral("/tmp/.X11-unix"));
+        const QStringList sockets = socketDirectory.entryList(
+            QStringList{QStringLiteral("X*")},
+            QDir::Files | QDir::System | QDir::NoDotAndDotDot,
+            QDir::Name);
+        for (const QString &socket : sockets) {
+            bool isDisplayNumber = false;
+            const int displayNumber = socket.sliced(1).toInt(&isDisplayNumber);
+            if (!isDisplayNumber) {
+                continue;
+            }
+            const QString display = QStringLiteral(":%1").arg(displayNumber);
+            if (!displays.contains(display)) {
+                displays.append(display);
+            }
         }
+
+        for (const QString &display : displays) {
+            const QByteArray displayName = display.toLocal8Bit();
+            int preferredScreen = 0;
+            xcb_connection_t *connection =
+                xcb_connect(displayName.constData(), &preferredScreen);
+            const bool connected = connection != nullptr
+                && xcb_connection_has_error(connection) == 0;
+            if (connection != nullptr) {
+                xcb_disconnect(connection);
+            }
+            if (connected) {
+                qputenv("DISPLAY", displayName);
+                return true;
+            }
+        }
+
         QThread::msleep(kXWaylandRetryMilliseconds);
     } while (timer.elapsed() < kXWaylandStartupTimeoutMilliseconds);
 
