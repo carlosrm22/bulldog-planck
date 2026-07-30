@@ -13,6 +13,10 @@ y el proyecto utiliza [versionado semántico](https://semver.org/lang/es/).
   evitando que Qt aborte si KDE inicia Planck antes que el servidor X.
 - El autoarranque localiza el socket de XWayland aunque Plasma todavía no haya
   exportado `DISPLAY`, en vez de abandonar el inicio inmediatamente.
+- El autoarranque descubre la credencial XWayland creada durante la sesión
+  actual aunque systemd conserve temporalmente un `XAUTHORITY` anterior.
+- KDE inicia Planck en la fase final del autoarranque para reducir carreras con
+  la creación de XWayland.
 
 ### Añadido
 

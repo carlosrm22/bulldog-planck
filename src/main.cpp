@@ -99,19 +99,50 @@ bool waitForXWayland() {
             }
         }
 
+        QStringList xAuthorities;
+        const QString inheritedAuthority = qEnvironmentVariable("XAUTHORITY");
+        if (!inheritedAuthority.isEmpty()) {
+            xAuthorities.append(inheritedAuthority);
+        }
+
+        const QString runtimeDirectory = qEnvironmentVariable("XDG_RUNTIME_DIR");
+        if (!runtimeDirectory.isEmpty()) {
+            const QFileInfoList authorityFiles = QDir(runtimeDirectory).entryInfoList(
+                QStringList{QStringLiteral("xauth_*")},
+                QDir::Files | QDir::NoDotAndDotDot,
+                QDir::Time);
+            for (const QFileInfo &authorityFile : authorityFiles) {
+                const QString authorityPath = authorityFile.absoluteFilePath();
+                if (!xAuthorities.contains(authorityPath)) {
+                    xAuthorities.append(authorityPath);
+                }
+            }
+        }
+        if (xAuthorities.isEmpty()) {
+            xAuthorities.append(QString());
+        }
+
         for (const QString &display : displays) {
             const QByteArray displayName = display.toLocal8Bit();
-            int preferredScreen = 0;
-            xcb_connection_t *connection =
-                xcb_connect(displayName.constData(), &preferredScreen);
-            const bool connected = connection != nullptr
-                && xcb_connection_has_error(connection) == 0;
-            if (connection != nullptr) {
-                xcb_disconnect(connection);
-            }
-            if (connected) {
-                qputenv("DISPLAY", displayName);
-                return true;
+            for (const QString &authority : xAuthorities) {
+                if (authority.isEmpty()) {
+                    qunsetenv("XAUTHORITY");
+                } else {
+                    qputenv("XAUTHORITY", authority.toLocal8Bit());
+                }
+
+                int preferredScreen = 0;
+                xcb_connection_t *connection =
+                    xcb_connect(displayName.constData(), &preferredScreen);
+                const bool connected = connection != nullptr
+                    && xcb_connection_has_error(connection) == 0;
+                if (connection != nullptr) {
+                    xcb_disconnect(connection);
+                }
+                if (connected) {
+                    qputenv("DISPLAY", displayName);
+                    return true;
+                }
             }
         }
 
@@ -758,7 +789,7 @@ private:
             "Exec=\"%1\"\n"
             "Icon=planck-pet\n"
             "Terminal=false\n"
-            "X-KDE-autostart-after=panel\n")
+            "X-KDE-autostart-phase=2\n")
             .arg(executable.replace(QStringLiteral("\""), QStringLiteral("\\\"")))
             .toUtf8();
         file.write(contents);
